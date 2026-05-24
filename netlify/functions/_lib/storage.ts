@@ -24,10 +24,8 @@ export async function saveStoryVersion(version: StoryVersion): Promise<void> {
   const s = stories();
   await s.setJSON(`${version.id}/v${version.version}.json`, version);
   let createdAt = version.created_at;
-  if (version.version > 1) {
-    const existing = (await s.get(`${version.id}/index.json`, { type: 'json' })) as StoryIndex | null;
-    if (existing?.created_at) createdAt = existing.created_at;
-  }
+  const existing = (await s.get(`${version.id}/index.json`, { type: 'json' })) as StoryIndex | null;
+  if (existing?.created_at) createdAt = existing.created_at;
   const idx: StoryIndex = {
     id: version.id,
     title: version.title,
@@ -35,6 +33,7 @@ export async function saveStoryVersion(version: StoryVersion): Promise<void> {
     cover_image_url: version.paragraphs[0]?.image_url ?? null,
     updated_at: version.created_at,
     created_at: createdAt,
+    status: version.status,
   };
   await s.setJSON(`${version.id}/index.json`, idx);
 }
@@ -62,7 +61,7 @@ export async function listStoryIndexes(): Promise<StoryIndex[]> {
     indexKeys.map((b) => s.get(b.key, { type: 'json' }) as Promise<StoryIndex | null>)
   );
   return items
-    .filter((x): x is StoryIndex => !!x)
+    .filter((x): x is StoryIndex => !!x && x.status === 'ready')
     .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
 }
 

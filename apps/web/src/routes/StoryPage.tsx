@@ -1,24 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { getStory } from '../api';
 import type { StoryVersion } from '../types';
+
+const POLL_INTERVAL_MS = 3000;
 
 export function StoryPage() {
   const { id, version } = useParams<{ id: string; version?: string }>();
   const [story, setStory] = useState<StoryVersion | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const pollingRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setError(null);
+    setStory(null);
+    let cancelled = false;
     const v = version ? parseInt(version, 10) : undefined;
-    getStory(id, v)
-      .then(setStory)
-      .catch((e) => setError((e as Error).message))
-      .finally(() => setLoading(false));
+
+    const tick = () => {
+      getStory(id, v)
+        .then((s) => {
+          if (cancelled) return;
+          setStory(s);
+          setLoading(false);
+          if (s.status === 'generating') {
+            pollingRef.current = window.setTimeout(tick, POLL_INTERVAL_MS);
+          }
+        })
+        .catch((e) => {
+          if (cancelled) return;
+          setError((e as Error).message);
+          setLoading(false);
+        });
+    };
+    tick();
+
+    return () => {
+      cancelled = true;
+      if (pollingRef.current) window.clearTimeout(pollingRef.current);
+    };
   }, [id, version]);
 
   if (loading) {
@@ -37,6 +61,36 @@ export function StoryPage() {
       <Layout>
         <div className="error">{error ?? 'Story not found.'}</div>
         <Link to="/" className="btn">Back to home</Link>
+      </Layout>
+    );
+  }
+
+  if (story.status === 'generating') {
+    return (
+      <Layout>
+        <div className="card loading">
+          <div className="spinner" />
+          <div className="question">Making your story...</div>
+          <p className="subtle">
+            Writing the words, drawing the pictures, and recording the voice.
+            This takes about a minute. The page will refresh on its own.
+          </p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (story.status === 'failed') {
+    return (
+      <Layout>
+        <div className="card">
+          <div className="question">Something went wrong.</div>
+          <p>{story.error ?? 'The story could not be made this time.'}</p>
+          <div className="row">
+            <Link to="/create" className="btn">Try a new one</Link>
+            <Link to="/" className="btn ghost">Back to home</Link>
+          </div>
+        </div>
       </Layout>
     );
   }

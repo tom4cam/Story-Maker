@@ -12,6 +12,8 @@ export interface StoryAnswer {
   answer: string;
 }
 
+export type StoryStatus = 'generating' | 'ready' | 'failed';
+
 export interface StoryVersion {
   id: string;
   version: number;
@@ -20,6 +22,8 @@ export interface StoryVersion {
   narration_url: string | null;
   source_answers: StoryAnswer[];
   created_at: string;
+  status: StoryStatus;
+  error?: string;
 }
 
 export interface StorySummary {

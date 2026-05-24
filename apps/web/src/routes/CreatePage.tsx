@@ -124,6 +124,8 @@ export function CreatePage() {
       .map((qq) => ({ question: qq.prompt, answer: answers[qq.id] }));
     try {
       const story = await createStory(payload);
+      // The trigger returns 202 immediately with a pending story id;
+      // the story page polls until the background worker finishes.
       navigate(`/s/${story.id}`);
     } catch (e) {
       setSubmitting(false);
@@ -136,11 +138,7 @@ export function CreatePage() {
       <Layout>
         <div className="card loading">
           <div className="spinner" />
-          <div className="question">Making your story...</div>
-          <p className="subtle">
-            Writing the words, drawing the pictures, and recording the
-            voice. This takes about a minute.
-          </p>
+          <div className="question">Sending it off to the storytellers...</div>
         </div>
       </Layout>
     );

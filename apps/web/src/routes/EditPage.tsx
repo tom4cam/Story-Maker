@@ -49,7 +49,8 @@ export function EditPage() {
         })),
         title
       );
-      navigate(`/s/${next.id}`);
+      // The update is now backgrounded; the story page will poll until ready.
+      navigate(`/s/${next.id}/v/${next.version}`);
     } catch (e) {
       setSaving(false);
       setError((e as Error).message);
@@ -67,8 +68,7 @@ export function EditPage() {
       <Layout>
         <div className="card loading">
           <div className="spinner" />
-          <div className="question">Saving the new version...</div>
-          <p className="subtle">Re recording the audio (and any new pictures).</p>
+          <div className="question">Sending the changes...</div>
         </div>
       </Layout>
     );

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bob's Big Butter Adventure</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #d4ecf5;
+    --paper: #fffaf0;
+    --ink: #2b1810;
+    --bob-hair: #f5c842;
+    --bob-skin: #f4ce9f;
+    --red: #e64b3c;
+    --sun: #f5b932;
+    --leaf: #6ba84a;
+    --butter: #ffd84a;
+    --blush: #ff8aa0;
+    --shadow: rgba(43, 24, 16, 0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Fredoka', sans-serif;
+    background: var(--sky);
+    background-image: 
+      radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.7) 0%, transparent 30%),
+      radial-gradient(circle at 85% 70%, rgba(245, 185, 50, 0.18) 0%, transparent 40%);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 16px 16px 60px;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    top: 40px;
+    right: -30px;
+    width: 120px;
+    height: 60px;
+    background: white;
+    border-radius: 60px;
+    box-shadow: 
+      -240px 200px 0 -10px white,
+      -80px 400px 0 -5px white,
+      -280px 700px 0 -15px white;
+    opacity: 0.7;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .book { max-width: 540px; margin: 0 auto; position: relative; z-index: 1; }
+  .title {
+    font-family: 'Caveat', cursive;
+    font-size: 3em;
+    line-height: 1;
+    text-align: center;
+    color: var(--red);
+    transform: rotate(-2deg);
+    margin: 12px 0 4px;
+    text-shadow: 3px 3px 0 var(--sun);
+  }
+  .subtitle {
+    font-family: 'Caveat', cursive;
+    font-size: 1.4em;
+    text-align: center;
+    color: var(--ink);
+    transform: rotate(1deg);
+    margin-bottom: 18px;
+    opacity: 0.8;
+  }
+  .audio-bar {
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 22px;
+    padding: 14px 18px;
+    margin: 16px 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 4px 4px 0 var(--shadow);
+    flex-wrap: wrap;
+  }
+  .audio-label {
+    font-family: 'Caveat', cursive;
+    font-size: 1.4em;
+    color: var(--red);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .audio-btn {
+    background: var(--sun);
+    border: 2.5px solid var(--ink);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 2px 0 var(--shadow);
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+  }
+  .audio-btn:hover, .audio-btn:active { transform: scale(0.95); }
+  .audio-btn.play { background: var(--leaf); }
+  .audio-btn.stop { background: var(--red); }
+  .audio-btn.playing { background: var(--sun); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 2px 2px 0 var(--shadow), 0 0 0 0 rgba(245, 185, 50, 0.6); }
+    50% { box-shadow: 2px 2px 0 var(--shadow), 0 0 0 8px rgba(245, 185, 50, 0); }
+  }
+  .audio-btn svg { width: 18px; height: 18px; fill: var(--ink); }
+  .audio-status {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1em;
+    color: var(--ink);
+    opacity: 0.75;
+    flex: 1;
+    min-width: 100px;
+  }
+  .stanza {
+    font-size: 1.15em;
+    margin: 22px 0;
+    padding: 18px 22px;
+    background: var(--paper);
+    border-radius: 22px;
+    box-shadow: 4px 4px 0 var(--shadow);
+    border: 2.5px solid var(--ink);
+    transition: all 0.3s ease;
+  }
+  .stanza:nth-child(odd) { transform: rotate(-0.4deg); }
+  .stanza:nth-child(even) { transform: rotate(0.5deg); }
+  .stanza.active {
+    background: #fff4c4;
+    transform: rotate(0deg) scale(1.02);
+    box-shadow: 6px 6px 0 var(--shadow);
+    border-color: var(--red);
+  }
+  .stanza p { margin: 0; }
+  .illustration {
+    margin: 32px auto;
+    display: flex;
+    justify-content: center;
+    filter: drop-shadow(4px 6px 0 var(--shadow));
+  }
+  .illustration svg { max-width: 100%; height: auto; }
+  .caption {
+    font-family: 'Caveat', cursive;
+    text-align: center;
+    font-size: 1.6em;
+    color: var(--ink);
+    margin: -12px 0 22px;
+  }
+  .caption.happy { color: var(--leaf); }
+  .caption.confused { color: var(--red); }
+  @keyframes wobble { 0%,100%{transform:rotate(-2deg);} 50%{transform:rotate(2deg);} }
+  @keyframes drive { 0%,100%{transform:translateX(-8px);} 50%{transform:translateX(8px);} }
+  @keyframes huh { 0%,100%{transform:rotate(-1deg);} 50%{transform:rotate(1deg);} }
+  @keyframes yum { 0%,100%{transform:scale(1) rotate(-1deg);} 50%{transform:scale(1.04) rotate(1deg);} }
+  .anim-bob { animation: wobble 3s ease-in-out infinite; transform-origin: bottom center; }
+  .anim-car { animation: drive 4s ease-in-out infinite; }
+  .anim-server { animation: huh 2.5s ease-in-out infinite; transform-origin: bottom center; }
+  .anim-feast { animation: yum 3s ease-in-out infinite; transform-origin: center; }
+  .the-end {
+    font-family: 'Caveat', cursive;
+    font-size: 3em;
+    color: var(--red);
+    text-align: center;
+    margin-top: 40px;
+    transform: rotate(-3deg);
+  }
+</style>
+</head>
+<body>
+
+<div class="book">
+
+  <h1 class="title">Bob's Big<br>Butter Adventure</h1>
+  <p class="subtitle">A storybook in rhyme</p>
+
+  <div class="audio-bar">
+    <span class="audio-label">Read aloud:</span>
+    <button class="audio-btn play" id="playBtn" aria-label="Play">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="audio-btn stop" id="stopBtn" aria-label="Stop">
+      <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg>
+    </button>
+    <span class="audio-status" id="audioStatus">Tap play for British story-time.</span>
+  </div>
+
+  <div class="illustration">
+    <svg class="anim-bob" viewBox="0 0 260 320" width="260" height="320" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="130" cy="100" r="78" fill="#f5b932" opacity="0.2"/>
+      <text x="40" y="50" font-family="Caveat" font-size="22" font-weight="700" fill="#f5b932">*</text>
+      <text x="210" y="40" font-family="Caveat" font-size="26" font-weight="700" fill="#f5b932">*</text>
+      <text x="30" y="120" font-family="Caveat" font-size="18" font-weight="700" fill="#e64b3c">*</text>
+      <text x="225" y="125" font-family="Caveat" font-size="20" font-weight="700" fill="#e64b3c">*</text>
+      <ellipse cx="130" cy="100" rx="52" ry="50" fill="#f4ce9f" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 78 100 Q 70 55 95 42 Q 115 30 130 38 Q 145 30 165 42 Q 190 55 182 100 Q 172 78 158 80 Q 142 65 130 72 Q 118 65 102 80 Q 88 78 78 100" fill="#f5c842" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 95 55 Q 100 50 112 52" stroke="#ffe590" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M 150 53 Q 158 48 168 53" stroke="#ffe590" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="108" cy="100" rx="10" ry="12" fill="white" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="152" cy="100" rx="10" ry="12" fill="white" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="109" cy="103" rx="6" ry="8" fill="#2b1810"/>
+      <ellipse cx="153" cy="103" rx="6" ry="8" fill="#2b1810"/>
+      <circle cx="111" cy="99" r="2.5" fill="white"/>
+      <circle cx="155" cy="99" r="2.5" fill="white"/>
+      <circle cx="107" cy="106" r="1.2" fill="white"/>
+      <circle cx="151" cy="106" r="1.2" fill="white"/>
+      <path d="M 98 84 Q 108 80 118 84" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 142 84 Q 152 80 162 84" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="130" cy="118" rx="3.5" ry="2.5" fill="#e8b88a"/>
+      <path d="M 82 122 Q 78 158 95 170 Q 130 182 165 170 Q 182 158 178 122 Q 168 138 148 138 Q 130 142 112 138 Q 92 138 82 122" fill="#f5c842" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 110 125 Q 118 130 130 128 Q 142 130 150 125 Q 144 120 130 122 Q 116 120 110 125" fill="#f5c842" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 120 134 Q 130 142 140 134" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="88" cy="120" rx="12" ry="7" fill="#ff8aa0" opacity="0.65"/>
+      <ellipse cx="172" cy="120" rx="12" ry="7" fill="#ff8aa0" opacity="0.65"/>
+      <path d="M 85 175 L 175 175 L 180 270 L 80 270 Z" fill="#e64b3c" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 100 175 L 160 175 L 165 260 L 95 260 Z" fill="#fffaf0" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 100 180 Q 130 170 160 180" fill="none" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 130 205 Q 122 195 116 203 Q 116 215 130 225 Q 144 215 144 203 Q 138 195 130 205" fill="#e64b3c" stroke="#2b1810" stroke-width="2"/>
+      <text x="130" y="245" text-anchor="middle" font-family="Caveat" font-size="12" font-weight="700" fill="#e64b3c">REAL FOOD</text>
+      <path d="M 85 195 Q 50 210 48 235" fill="none" stroke="#f4ce9f" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 85 195 Q 50 210 48 235" fill="none" stroke="#2b1810" stroke-width="3" stroke-linecap="round" fill-opacity="0"/>
+      <path d="M 175 195 Q 215 205 218 230" fill="none" stroke="#f4ce9f" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 175 195 Q 215 205 218 230" fill="none" stroke="#2b1810" stroke-width="3" stroke-linecap="round" fill-opacity="0"/>
+      <rect x="214" y="215" width="7" height="40" fill="#8a5a2a" stroke="#2b1810" stroke-width="2" rx="2"/>
+      <ellipse cx="218" cy="208" rx="12" ry="9" fill="#c0c0c0" stroke="#2b1810" stroke-width="2"/>
+      <rect x="34" y="228" width="30" height="16" fill="#ffd84a" stroke="#2b1810" stroke-width="2.5" rx="3"/>
+      <text x="49" y="240" text-anchor="middle" font-family="Fredoka" font-size="8" font-weight="700" fill="#2b1810">BUTTER</text>
+    </svg>
+  </div>
+  <p class="caption happy">This is Bob!</p>
+
+  <div class="stanza" data-stanza="0">
+    <p>Now this is our Bob, with his golden blond beard,<br>
+    And his hair like the sun (oh, his hair is endeared!).<br>
+    He lives with sweet Eve in a snug little spot,<br>
+    With their boy little Brennan, the best son they've got!</p>
+  </div>
+
+  <div class="stanza" data-stanza="1">
+    <p>In Bob's tidy kitchen, with pots in a row,<br>
+    He cooks with real butter, all sunshine and glow!<br>
+    Or tallow from cows, melted creamy and bright,<br>
+    Or olive oil green, what a wonderful sight!</p>
+  </div>
+
+  <div class="stanza" data-stanza="2">
+    <p>"These fats are the BEST ones!" Bob cries with a grin,<br>
+    "They're real and they're simple, no factory bin!<br>
+    Saturated fats keep our bodies so strong,<br>
+    And the Mufas help everything chug right along!"</p>
+  </div>
+
+  <div class="illustration">
+    <svg class="anim-car" viewBox="0 0 380 240" width="380" height="240" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="340" cy="40" r="24" fill="#f5b932" stroke="#2b1810" stroke-width="2.5"/>
+      <line x1="340" y1="8" x2="340" y2="0" stroke="#f5b932" stroke-width="3" stroke-linecap="round"/>
+      <line x1="368" y1="40" x2="375" y2="40" stroke="#f5b932" stroke-width="3" stroke-linecap="round"/>
+      <line x1="320" y1="20" x2="315" y2="13" stroke="#f5b932" stroke-width="3" stroke-linecap="round"/>
+      <line x1="362" y1="22" x2="368" y2="15" stroke="#f5b932" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="333" cy="38" r="2" fill="#2b1810"/>
+      <circle cx="347" cy="38" r="2" fill="#2b1810"/>
+      <path d="M 333 47 Q 340 51 347 47" fill="none" stroke="#2b1810" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="328" cy="46" rx="3" ry="2" fill="#ff8aa0" opacity="0.6"/>
+      <ellipse cx="352" cy="46" rx="3" ry="2" fill="#ff8aa0" opacity="0.6"/>
+      <path d="M 80 60 Q 85 55 90 60 Q 95 55 100 60" fill="none" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 200 50 Q 205 45 210 50 Q 215 45 220 50" fill="none" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 0 190 L 70 110 L 130 190 Z" fill="#9a8aa8" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 260 190 L 330 100 L 380 190" fill="#9a8aa8" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 60 122 L 70 110 L 80 122 Z" fill="white"/>
+      <path d="M 320 115 L 330 100 L 340 115 Z" fill="white"/>
+      <rect x="0" y="190" width="380" height="50" fill="#a89070" stroke="#2b1810" stroke-width="2.5"/>
+      <line x1="20" y1="215" x2="60" y2="215" stroke="#fffaf0" stroke-width="4"/>
+      <line x1="100" y1="215" x2="140" y2="215" stroke="#fffaf0" stroke-width="4"/>
+      <line x1="280" y1="215" x2="320" y2="215" stroke="#fffaf0" stroke-width="4"/>
+      <path d="M 90 175 L 100 135 L 155 130 L 175 113 L 245 113 L 260 135 L 285 140 L 290 175 Z" fill="#e64b3c" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 105 145 L 150 140" stroke="white" stroke-width="2.5" opacity="0.6"/>
+      <path d="M 113 135 L 125 118 L 168 116 L 170 135 Z" fill="#bfe5f0" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 180 116 L 240 116 L 255 135 L 180 135 Z" fill="#bfe5f0" stroke="#2b1810" stroke-width="2.5"/>
+      <g transform="translate(145, 128)">
+        <circle r="11" fill="#f4ce9f" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M -10 -3 Q -11 -10 -3 -12 Q 4 -12 8 -8 Q 11 -10 11 -5 Q 9 -3 6 -2 Q 0 -8 -7 -3" fill="#f5c842" stroke="#2b1810" stroke-width="1.5"/>
+        <ellipse cx="-3" cy="0" rx="2" ry="2.5" fill="white" stroke="#2b1810" stroke-width="1"/>
+        <ellipse cx="3" cy="0" rx="2" ry="2.5" fill="white" stroke="#2b1810" stroke-width="1"/>
+        <circle cx="-3" cy="0.5" r="1.2" fill="#2b1810"/>
+        <circle cx="3" cy="0.5" r="1.2" fill="#2b1810"/>
+        <path d="M -4 5 Q 0 9 4 5" fill="#f5c842" stroke="#2b1810" stroke-width="1.5"/>
+        <ellipse cx="-7" cy="3" rx="2" ry="1.5" fill="#ff8aa0" opacity="0.6"/>
+        <ellipse cx="7" cy="3" rx="2" ry="1.5" fill="#ff8aa0" opacity="0.6"/>
+      </g>
+      <g transform="translate(195, 127)">
+        <circle r="10" fill="#f4ce9f" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M -10 -3 Q -10 -10 -2 -12 Q 6 -12 10 -5 Q 6 -8 0 -7 Q -5 -7 -10 -3" fill="#5a3a1a" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M -10 -2 Q -13 8 -10 12" fill="#5a3a1a" stroke="#2b1810" stroke-width="1.5"/>
+        <ellipse cx="-3" cy="0" rx="2" ry="2.5" fill="white" stroke="#2b1810" stroke-width="1"/>
+        <ellipse cx="3" cy="0" rx="2" ry="2.5" fill="white" stroke="#2b1810" stroke-width="1"/>
+        <circle cx="-3" cy="0.5" r="1.2" fill="#2b1810"/>
+        <circle cx="3" cy="0.5" r="1.2" fill="#2b1810"/>
+        <path d="M -3 5 Q 0 8 3 5" fill="none" stroke="#2b1810" stroke-width="1.5" stroke-linecap="round"/>
+        <ellipse cx="-7" cy="3" rx="2" ry="1.5" fill="#ff8aa0" opacity="0.6"/>
+        <ellipse cx="7" cy="3" rx="2" ry="1.5" fill="#ff8aa0" opacity="0.6"/>
+      </g>
+      <g transform="translate(230, 128)">
+        <circle r="9" fill="#f4ce9f" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M -9 -3 Q -8 -10 -1 -11 Q 6 -11 9 -5 Q 5 -7 0 -6 Q -5 -6 -9 -3" fill="#8a5a2a" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M -3 -8 L -3 -13" stroke="#8a5a2a" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="-3" cy="0" rx="2" ry="2.5" fill="white" stroke="#2b1810" stroke-width="1"/>
+        <ellipse cx="3" cy="0" rx="2" ry="2.5" fill="white" stroke="#2b1810" stroke-width="1"/>
+        <circle cx="-3" cy="0.5" r="1.2" fill="#2b1810"/>
+        <circle cx="3" cy="0.5" r="1.2" fill="#2b1810"/>
+        <path d="M -4 4 Q 0 8 4 4" fill="white" stroke="#2b1810" stroke-width="1.5"/>
+        <ellipse cx="-6" cy="3" rx="1.8" ry="1.3" fill="#ff8aa0" opacity="0.6"/>
+        <ellipse cx="6" cy="3" rx="1.8" ry="1.3" fill="#ff8aa0" opacity="0.6"/>
+      </g>
+      <circle cx="130" cy="180" r="22" fill="#2b1810"/>
+      <circle cx="130" cy="180" r="11" fill="#a89070" stroke="#2b1810" stroke-width="1.5"/>
+      <circle cx="260" cy="180" r="22" fill="#2b1810"/>
+      <circle cx="260" cy="180" r="11" fill="#a89070" stroke="#2b1810" stroke-width="1.5"/>
+      <line x1="55" y1="148" x2="80" y2="148" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="163" x2="75" y2="163" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="50" y1="178" x2="80" y2="178" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 175 105 Q 170 100 167 105 Q 167 110 175 116 Q 183 110 183 105 Q 180 100 175 105" fill="#e64b3c" stroke="#2b1810" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <p class="caption happy">Off to Twin Falls, Idaho!</p>
+
+  <div class="stanza" data-stanza="3">
+    <p>One bright sunny morning, Bob hopped with a shout,<br>
+    "Let's go on a road trip! Let's pack and head out!<br>
+    To Twin Falls, Idaho, where the waterfalls roar!<br>
+    Grab snacks and your sneakers, let's head out the door!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="4">
+    <p>So Eve packed the cooler and Brennan his toys,<br>
+    And off the three zoomed with the merriest noise.<br>
+    Past mountains and meadows, past rivers and pine,<br>
+    They reached the great Twin Falls, all sparkly and fine!</p>
+  </div>
+
+  <div class="illustration">
+    <svg viewBox="0 0 340 240" width="340" height="240" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="340" height="240" fill="#d4ecf5"/>
+      <path d="M 50 200 A 120 120 0 0 1 290 200" fill="none" stroke="#e64b3c" stroke-width="6"/>
+      <path d="M 56 200 A 114 114 0 0 1 284 200" fill="none" stroke="#f5942e" stroke-width="6"/>
+      <path d="M 62 200 A 108 108 0 0 1 278 200" fill="none" stroke="#f5b932" stroke-width="6"/>
+      <path d="M 68 200 A 102 102 0 0 1 272 200" fill="none" stroke="#6ba84a" stroke-width="6"/>
+      <path d="M 74 200 A 96 96 0 0 1 266 200" fill="none" stroke="#5a8acc" stroke-width="6"/>
+      <path d="M 0 80 L 120 80 L 120 240 L 0 240 Z" fill="#a89070" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 220 80 L 340 80 L 340 240 L 220 240 Z" fill="#a89070" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 30 100 Q 60 105 90 100" fill="none" stroke="#2b1810" stroke-width="1.5" opacity="0.5"/>
+      <path d="M 20 150 Q 60 155 100 150" fill="none" stroke="#2b1810" stroke-width="1.5" opacity="0.5"/>
+      <path d="M 240 110 Q 280 115 320 110" fill="none" stroke="#2b1810" stroke-width="1.5" opacity="0.5"/>
+      <path d="M 250 160 Q 280 165 320 160" fill="none" stroke="#2b1810" stroke-width="1.5" opacity="0.5"/>
+      <path d="M 65 80 L 110 80 L 105 210 L 70 210 Z" fill="#bfe5f0" stroke="#2b1810" stroke-width="2.5"/>
+      <line x1="75" y1="90" x2="73" y2="205" stroke="white" stroke-width="2"/>
+      <line x1="85" y1="90" x2="85" y2="205" stroke="white" stroke-width="2"/>
+      <line x1="95" y1="90" x2="97" y2="205" stroke="white" stroke-width="2"/>
+      <path d="M 230 80 L 275 80 L 270 210 L 235 210 Z" fill="#bfe5f0" stroke="#2b1810" stroke-width="2.5"/>
+      <line x1="240" y1="90" x2="238" y2="205" stroke="white" stroke-width="2"/>
+      <line x1="250" y1="90" x2="250" y2="205" stroke="white" stroke-width="2"/>
+      <line x1="260" y1="90" x2="262" y2="205" stroke="white" stroke-width="2"/>
+      <ellipse cx="88" cy="215" rx="38" ry="10" fill="white" opacity="0.85"/>
+      <ellipse cx="252" cy="215" rx="38" ry="10" fill="white" opacity="0.85"/>
+      <rect x="0" y="218" width="340" height="22" fill="#7fb8d4" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 30 225 Q 50 222 70 225" fill="none" stroke="white" stroke-width="1.5"/>
+      <path d="M 150 230 Q 170 227 190 230" fill="none" stroke="white" stroke-width="1.5"/>
+      <path d="M 270 225 Q 290 222 310 225" fill="none" stroke="white" stroke-width="1.5"/>
+      <path d="M 25 80 L 35 50 L 45 80 Z" fill="#3a6a2a" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 280 80 L 290 45 L 300 80 Z" fill="#3a6a2a" stroke="#2b1810" stroke-width="2"/>
+      <g transform="translate(155, 60)">
+        <path d="M 0 0 Q -6 -5 -8 0 Q -6 5 0 0 Q 6 -5 8 0 Q 6 5 0 0" fill="#f5b932" stroke="#2b1810" stroke-width="1.5"/>
+      </g>
+      <g transform="translate(180, 100)">
+        <path d="M 0 0 Q -6 -5 -8 0 Q -6 5 0 0 Q 6 -5 8 0 Q 6 5 0 0" fill="#e64b3c" stroke="#2b1810" stroke-width="1.5"/>
+      </g>
+      <g transform="translate(150, 170)">
+        <ellipse cx="0" cy="22" rx="9" ry="20" fill="#e64b3c" stroke="#2b1810" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="8" fill="#f4ce9f" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M -7 -3 Q -6 -8 0 -8 Q 6 -8 7 -3 Q 5 -5 0 -5 Q -5 -5 -7 -3" fill="#f5c842" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M -3 3 Q 0 6 3 3" fill="#f5c842" stroke="#2b1810" stroke-width="1"/>
+        <circle cx="-2.5" cy="0" r="1.3" fill="#2b1810"/>
+        <circle cx="2.5" cy="0" r="1.3" fill="#2b1810"/>
+        <path d="M -7 18 L -14 8" stroke="#f4ce9f" stroke-width="4" stroke-linecap="round"/>
+        <path d="M -7 18 L -14 8" stroke="#2b1810" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <ellipse cx="18" cy="24" rx="8" ry="18" fill="#7a9ec4" stroke="#2b1810" stroke-width="1.5"/>
+        <circle cx="18" cy="3" r="7" fill="#f4ce9f" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M 12 0 Q 13 -5 18 -5 Q 23 -5 24 0" fill="#5a3a1a" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M 12 0 Q 10 8 13 12" fill="#5a3a1a" stroke="#2b1810" stroke-width="1.5"/>
+        <circle cx="15.5" cy="3" r="1.2" fill="#2b1810"/>
+        <circle cx="20.5" cy="3" r="1.2" fill="#2b1810"/>
+        <path d="M 15 7 Q 18 9 21 7" fill="none" stroke="#2b1810" stroke-width="1" stroke-linecap="round"/>
+        <ellipse cx="32" cy="28" rx="6" ry="14" fill="#f5b932" stroke="#2b1810" stroke-width="1.5"/>
+        <circle cx="32" cy="10" r="6" fill="#f4ce9f" stroke="#2b1810" stroke-width="1.5"/>
+        <path d="M 27 7 Q 28 3 32 3 Q 36 3 37 7" fill="#8a5a2a" stroke="#2b1810" stroke-width="1.5"/>
+        <circle cx="30" cy="10" r="1" fill="#2b1810"/>
+        <circle cx="34" cy="10" r="1" fill="#2b1810"/>
+        <path d="M 29 13 Q 32 16 35 13" fill="white" stroke="#2b1810" stroke-width="1"/>
+        <path d="M 38 22 L 50 15" stroke="#f4ce9f" stroke-width="4" stroke-linecap="round"/>
+        <path d="M 38 22 L 50 15" stroke="#2b1810" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </g>
+      <text x="170" y="155" font-family="Caveat" font-size="22" font-weight="700" fill="#e64b3c" transform="rotate(-5, 170, 155)">Wow!</text>
+    </svg>
+  </div>
+  <p class="caption happy">The mighty Twin Falls!</p>
+
+  <div class="stanza" data-stanza="5">
+    <p>"Hooray!" cheered young Brennan, "The mist and the spray!"<br>
+    What a wonderful, marvelous, magical day!<br>
+    But soon tummies grumbled, the sun started low,<br>
+    "Let's find us some supper!" said Bob. "Off we go!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="6">
+    <p>They sat in a booth at a diner so bright,<br>
+    A young server came over with menus in sight.<br>
+    "I'll have steak," Bob said kindly, "but please understand,<br>
+    I'm sensitive to seed oils, they're sadly not grand."</p>
+  </div>
+
+  <div class="stanza" data-stanza="7">
+    <p>"Could you cook it in butter? Or tallow's just fine.<br>
+    Or olive oil's lovely; please, any of mine.<br>
+    Just no seed oils for me, please, if that's alright!"<br>
+    The server blinked back with a curious slight fright.</p>
+  </div>
+
+  <div class="illustration">
+    <svg class="anim-server" viewBox="0 0 260 320" width="260" height="320" xmlns="http://www.w3.org/2000/svg">
+      <text x="40" y="50" font-family="Caveat" font-size="42" font-weight="700" fill="#e64b3c">?</text>
+      <text x="210" y="65" font-family="Caveat" font-size="34" font-weight="700" fill="#f5b932">?</text>
+      <text x="20" y="105" font-family="Caveat" font-size="26" font-weight="700" fill="#7a9ec4">?</text>
+      <text x="220" y="110" font-family="Caveat" font-size="22" font-weight="700" fill="#e64b3c">?</text>
+      <ellipse cx="130" cy="105" rx="50" ry="50" fill="#f4ce9f" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 80 100 Q 76 60 100 50 Q 120 42 130 48 Q 140 42 160 50 Q 184 60 180 100 Q 170 80 160 82 Q 145 70 130 75 Q 115 70 100 82 Q 90 80 80 100" fill="#8a5a2a" stroke="#2b1810" stroke-width="2.5"/>
+      <ellipse cx="180" cy="100" rx="10" ry="22" fill="#8a5a2a" stroke="#2b1810" stroke-width="2.5"/>
+      <circle cx="180" cy="80" r="4" fill="#e64b3c" stroke="#2b1810" stroke-width="1.5"/>
+      <ellipse cx="113" cy="105" rx="11" ry="13" fill="white" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="147" cy="105" rx="11" ry="13" fill="white" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="113" cy="107" rx="6" ry="8" fill="#2b1810"/>
+      <ellipse cx="147" cy="103" rx="6" ry="8" fill="#2b1810"/>
+      <circle cx="116" cy="103" r="2.5" fill="white"/>
+      <circle cx="150" cy="99" r="2.5" fill="white"/>
+      <path d="M 102 88 Q 113 82 124 90" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 136 92 Q 147 80 158 88" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 178 130 Q 182 138 184 145 Q 186 152 182 155 Q 176 152 176 145 Q 176 138 178 130" fill="#7fb8d4" stroke="#2b1810" stroke-width="2"/>
+      <circle cx="180" cy="148" r="1.5" fill="white"/>
+      <ellipse cx="130" cy="122" rx="3" ry="2.5" fill="#e8b88a"/>
+      <path d="M 115 138 Q 120 132 125 138 Q 130 144 135 138 Q 140 132 145 138" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="92" cy="125" rx="10" ry="6" fill="#ff8aa0" opacity="0.5"/>
+      <ellipse cx="168" cy="125" rx="10" ry="6" fill="#ff8aa0" opacity="0.5"/>
+      <path d="M 85 160 L 175 160 L 180 280 L 80 280 Z" fill="#7a9ec4" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 100 160 L 130 175 L 160 160" fill="white" stroke="#2b1810" stroke-width="2.5"/>
+      <rect x="145" y="190" width="22" height="14" fill="white" stroke="#2b1810" stroke-width="2" rx="2"/>
+      <line x1="148" y1="197" x2="164" y2="197" stroke="#2b1810" stroke-width="1" opacity="0.5"/>
+      <path d="M 85 195 Q 50 205 38 195" fill="none" stroke="#f4ce9f" stroke-width="14" stroke-linecap="round"/>
+      <path d="M 85 195 Q 50 205 38 195" fill="none" stroke="#2b1810" stroke-width="3" stroke-linecap="round" fill-opacity="0"/>
+      <path d="M 175 195 Q 210 205 222 195" fill="none" stroke="#f4ce9f" stroke-width="14" stroke-linecap="round"/>
+      <path d="M 175 195 Q 210 205 222 195" fill="none" stroke="#2b1810" stroke-width="3" stroke-linecap="round" fill-opacity="0"/>
+      <rect x="10" y="180" width="38" height="42" fill="#fffaf0" stroke="#2b1810" stroke-width="2.5" rx="3"/>
+      <line x1="16" y1="190" x2="42" y2="190" stroke="#2b1810" stroke-width="1" opacity="0.5"/>
+      <line x1="16" y1="198" x2="42" y2="198" stroke="#2b1810" stroke-width="1" opacity="0.5"/>
+      <line x1="16" y1="206" x2="42" y2="206" stroke="#2b1810" stroke-width="1" opacity="0.5"/>
+      <text x="29" y="217" text-anchor="middle" font-family="Caveat" font-size="14" font-weight="700" fill="#e64b3c">???</text>
+      <rect x="220" y="180" width="6" height="28" fill="#2b1810" rx="2" transform="rotate(25, 223, 195)"/>
+      <path d="M 180 230 Q 250 230 250 265 Q 250 295 210 295 L 200 310 L 195 295 Q 180 295 180 265 Z" fill="white" stroke="#2b1810" stroke-width="2.5"/>
+      <text x="215" y="258" text-anchor="middle" font-family="Caveat" font-size="18" font-weight="700" fill="#2b1810">You pick</text>
+      <text x="215" y="276" text-anchor="middle" font-family="Caveat" font-size="18" font-weight="700" fill="#e64b3c">first?</text>
+    </svg>
+  </div>
+  <p class="caption confused">Pick first? But how?</p>
+
+  <div class="stanza" data-stanza="8">
+    <p>"Um, I don't really know how the kitchen cooks food,<br>
+    Could you pick something first? Please don't think I'm rude.<br>
+    Then I'll go and ask what they cook with, you see?<br>
+    But you need to choose first, before checking with me!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="9">
+    <p>Bob laughed just a smidge. "But how can I pick,<br>
+    When the oil is the whole entire heart of the trick?<br>
+    If they fry it in seed oil, my tummy will say,<br>
+    'I don't like this at all!' and then ruin my day!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="10">
+    <p>The server just stared, then she shrugged and walked back,<br>
+    She returned with a frown and a wobbly attack:<br>
+    "The cook says, 'Pick first, then we'll see what we use.'<br>
+    You can read the whole menu! Just take it and choose!"</p>
+  </div>
+
+  <div class="illustration">
+    <svg viewBox="0 0 340 220" width="340" height="220" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(40, 20)">
+        <rect x="30" y="0" width="40" height="20" fill="#5a4a1a" stroke="#2b1810" stroke-width="2.5" rx="3"/>
+        <rect x="35" y="20" width="30" height="15" fill="#d6c441" stroke="#2b1810" stroke-width="2.5"/>
+        <path d="M 12 35 Q 12 32 16 32 L 84 32 Q 88 32 88 35 L 92 180 Q 92 195 76 195 L 24 195 Q 8 195 8 180 Z" fill="#d6c441" stroke="#2b1810" stroke-width="3"/>
+        <rect x="20" y="80" width="60" height="80" fill="#fffaf0" stroke="#2b1810" stroke-width="2.5" rx="3"/>
+        <text x="50" y="100" text-anchor="middle" font-family="Caveat" font-size="14" font-weight="700" fill="#2b1810">Vegetable</text>
+        <text x="50" y="120" text-anchor="middle" font-family="Caveat" font-size="14" font-weight="700" fill="#2b1810">Oil</text>
+        <line x1="20" y1="130" x2="80" y2="130" stroke="#2b1810" stroke-width="1.5"/>
+        <text x="50" y="148" text-anchor="middle" font-family="Fredoka" font-size="9" fill="#2b1810">soybean,</text>
+        <text x="50" y="158" text-anchor="middle" font-family="Fredoka" font-size="9" fill="#2b1810">canola, corn</text>
+      </g>
+      <text x="150" y="120" font-family="Caveat" font-size="36" font-weight="700" fill="#2b1810">vs.</text>
+      <g transform="translate(200, 30)">
+        <text x="50" y="0" text-anchor="middle" font-family="Caveat" font-size="22" font-weight="700" fill="#6ba84a">Actual</text>
+        <text x="50" y="22" text-anchor="middle" font-family="Caveat" font-size="22" font-weight="700" fill="#6ba84a">vegetables:</text>
+        <g transform="translate(15, 50)">
+          <path d="M 0 0 L 20 0 L 12 35 L 8 35 Z" fill="#f5942e" stroke="#2b1810" stroke-width="2"/>
+          <path d="M 0 0 Q -3 -10 5 -8 Q 8 -12 12 -8 Q 18 -10 20 0" fill="#6ba84a" stroke="#2b1810" stroke-width="2"/>
+        </g>
+        <g transform="translate(60, 50)">
+          <circle cx="0" cy="5" r="9" fill="#6ba84a" stroke="#2b1810" stroke-width="2"/>
+          <circle cx="-8" cy="0" r="7" fill="#6ba84a" stroke="#2b1810" stroke-width="2"/>
+          <circle cx="8" cy="0" r="7" fill="#6ba84a" stroke="#2b1810" stroke-width="2"/>
+          <rect x="-4" y="12" width="8" height="14" fill="#d9d97a" stroke="#2b1810" stroke-width="2"/>
+        </g>
+        <g transform="translate(105, 65)">
+          <circle r="13" fill="#e64b3c" stroke="#2b1810" stroke-width="2"/>
+          <path d="M -6 -10 Q -3 -16 0 -13 Q 3 -16 6 -10 Q 4 -8 0 -10 Q -4 -8 -6 -10" fill="#6ba84a" stroke="#2b1810" stroke-width="1.5"/>
+        </g>
+        <line x1="-10" y1="40" x2="125" y2="105" stroke="#e64b3c" stroke-width="6" stroke-linecap="round"/>
+        <line x1="125" y1="40" x2="-10" y2="105" stroke="#e64b3c" stroke-width="6" stroke-linecap="round"/>
+        <text x="55" y="135" text-anchor="middle" font-family="Caveat" font-size="20" font-weight="700" fill="#e64b3c">NOT INSIDE!</text>
+      </g>
+    </svg>
+  </div>
+  <p class="caption confused">Vegetable oil: zero vegetables!</p>
+
+  <div class="stanza" data-stanza="11">
+    <p>Bob chuckled and turned to his Eve and his boy,<br>
+    "You know, this seems silly, this round-and-round ploy.<br>
+    Those seed oils they use, when they heat them up high,<br>
+    They hurt ALL of us, that's not a joke or a lie!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="12">
+    <p>"They call it 'vegetable oil', now isn't that funny?<br>
+    There's no veggie inside, not a carrot or bunny!<br>
+    It's seeds that get crushed in a chemical mash,<br>
+    With heat and with bleach, and they ladle the splash!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="13">
+    <p>"So 'sensitive', sure, here's a truth like a song:<br>
+    We're ALL of us sensitive when they're cooked too long!<br>
+    But menus stay quiet, and kitchens stay hidden,<br>
+    And folks eat the oils that should really be forbidden."</p>
+  </div>
+
+  <div class="stanza" data-stanza="14">
+    <p>The young server giggled, "I'd never thought THAT!<br>
+    Let me check with the cook." Off she went in a chat.<br>
+    She came back: "The fryer holds gallons of canola,<br>
+    The grill might be cleaner, but really, who knowla?"</p>
+  </div>
+
+  <div class="stanza" data-stanza="15">
+    <p>Bob ordered a salad, plain leaves on a plate,<br>
+    And he ate it with humor, no anger, no hate.<br>
+    At café and diner, the same tale would brew,<br>
+    "What oil?" they would ask. "We just don't have a clue!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="16">
+    <p>Sweet Eve squeezed Bob's hand, "Soon home, dear, soon home,<br>
+    Where YOU know each pan, where we're free to just roam!"<br>
+    So back in the car, off the family did zoom,<br>
+    Through Idaho sunsets, the whole sky in bloom.</p>
+  </div>
+
+  <div class="illustration">
+    <svg class="anim-feast" viewBox="0 0 360 300" width="360" height="300" xmlns="http://www.w3.org/2000/svg">
+      <text x="30" y="60" font-family="Caveat" font-size="24" font-weight="700" fill="#f5b932">*</text>
+      <text x="320" y="80" font-family="Caveat" font-size="28" font-weight="700" fill="#f5b932">*</text>
+      <text x="50" y="170" font-family="Caveat" font-size="20" font-weight="700" fill="#e64b3c">*</text>
+      <text x="310" y="180" font-family="Caveat" font-size="22" font-weight="700" fill="#6ba84a">*</text>
+      <text x="170" y="40" font-family="Caveat" font-size="26" font-weight="700" fill="#e64b3c">YUM!</text>
+      <path d="M 80 90 Q 75 84 70 90 Q 70 96 80 105 Q 90 96 90 90 Q 85 84 80 90" fill="#ff8aa0" stroke="#2b1810" stroke-width="1.5"/>
+      <path d="M 290 90 Q 285 84 280 90 Q 280 96 290 105 Q 300 96 300 90 Q 295 84 290 90" fill="#ff8aa0" stroke="#2b1810" stroke-width="1.5"/>
+      <circle cx="180" cy="95" r="42" fill="#f4ce9f" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 138 95 Q 132 55 158 45 Q 178 35 198 45 Q 224 55 222 95 Q 215 75 200 75 Q 185 65 178 70 Q 170 65 155 75 Q 144 75 138 95" fill="#f5c842" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 158 92 Q 165 86 172 92" fill="none" stroke="#2b1810" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 188 92 Q 195 86 202 92" fill="none" stroke="#2b1810" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 152 78 Q 165 73 175 78" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 185 78 Q 195 73 208 78" fill="none" stroke="#2b1810" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 142 115 Q 138 142 155 152 Q 180 162 205 152 Q 222 142 218 115 Q 210 128 192 130 Q 180 132 168 130 Q 150 128 142 115" fill="#f5c842" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 162 118 Q 170 122 180 120 Q 190 122 198 118 Q 192 115 180 117 Q 168 115 162 118" fill="#f5c842" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 165 128 Q 180 145 195 128" fill="white" stroke="#2b1810" stroke-width="3"/>
+      <path d="M 165 128 Q 180 145 195 128" fill="none" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="146" cy="110" rx="9" ry="6" fill="#ff8aa0" opacity="0.7"/>
+      <ellipse cx="214" cy="110" rx="9" ry="6" fill="#ff8aa0" opacity="0.7"/>
+      <ellipse cx="180" cy="245" rx="165" ry="32" fill="#c08a4a" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="180" cy="240" rx="165" ry="32" fill="#d9a35a" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="180" cy="220" rx="130" ry="26" fill="#fffaf0" stroke="#2b1810" stroke-width="3"/>
+      <ellipse cx="180" cy="215" rx="125" ry="23" fill="white" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 105 200 Q 100 183 117 175 Q 145 168 170 175 Q 187 180 182 198 Q 170 210 140 210 Q 115 210 105 200" fill="#8a3a2a" stroke="#2b1810" stroke-width="2.5"/>
+      <path d="M 115 185 Q 140 188 165 185" fill="none" stroke="#5a2a1a" stroke-width="1.5"/>
+      <path d="M 110 195 Q 140 198 170 195" fill="none" stroke="#5a2a1a" stroke-width="1.5"/>
+      <text x="140" y="194" text-anchor="middle" font-family="Caveat" font-size="11" font-weight="700" fill="#fffaf0">grass-fed</text>
+      <rect x="135" y="172" width="16" height="9" fill="#ffd84a" stroke="#2b1810" stroke-width="2" rx="2"/>
+      <ellipse cx="225" cy="198" rx="25" ry="15" fill="#e89048" stroke="#2b1810" stroke-width="2.5" transform="rotate(-15, 225, 198)"/>
+      <path d="M 203 198 Q 225 195 247 198" fill="none" stroke="#2b1810" stroke-width="1.5"/>
+      <ellipse cx="225" cy="190" rx="7" ry="3" fill="#ffd84a" opacity="0.7"/>
+      <ellipse cx="260" cy="208" rx="20" ry="14" fill="white" stroke="#2b1810" stroke-width="2.5"/>
+      <circle cx="260" cy="208" r="7" fill="#ffd84a" stroke="#2b1810" stroke-width="2"/>
+      <circle cx="258" cy="206" r="2" fill="#ffe590"/>
+      <circle cx="100" cy="215" r="7" fill="#a82b3c" stroke="#2b1810" stroke-width="2"/>
+      <circle cx="88" cy="222" r="6" fill="#5a3a8a" stroke="#2b1810" stroke-width="2"/>
+      <circle cx="106" cy="225" r="6" fill="#a82b3c" stroke="#2b1810" stroke-width="2"/>
+      <circle cx="92" cy="210" r="5" fill="#5a3a8a" stroke="#2b1810" stroke-width="2"/>
+      <path d="M 290 208 Q 305 200 315 208 L 310 222 Q 300 226 290 222 Z" fill="#f5942e" stroke="#2b1810" stroke-width="2.5"/>
+      <line x1="302" y1="204" x2="302" y2="222" stroke="#2b1810" stroke-width="1"/>
+      <line x1="296" y1="206" x2="308" y2="222" stroke="#2b1810" stroke-width="1"/>
+      <line x1="308" y1="206" x2="296" y2="222" stroke="#2b1810" stroke-width="1"/>
+      <path d="M 140 165 Q 145 155 140 145" fill="none" stroke="#2b1810" stroke-width="2" opacity="0.5"/>
+      <path d="M 225 175 Q 230 165 225 155" fill="none" stroke="#2b1810" stroke-width="2" opacity="0.5"/>
+      <path d="M 260 178 Q 265 168 260 158" fill="none" stroke="#2b1810" stroke-width="2" opacity="0.5"/>
+      <text x="60" y="200" font-family="Caveat" font-size="22" font-weight="700" fill="#6ba84a">Home!</text>
+    </svg>
+  </div>
+  <p class="caption happy">Home sweet home!</p>
+
+  <div class="stanza" data-stanza="17">
+    <p>When at last they pulled up to their cozy front door,<br>
+    Bob danced to the kitchen and danced some bit more!<br>
+    He flung wide the fridge, oh the wonders he found:<br>
+    Real butter! Real tallow! Good food all around!</p>
+  </div>
+
+  <div class="stanza" data-stanza="18">
+    <p>He pulled out fresh eggs, low-Poufa, the best,<br>
+    And grass-fed beef steaks, much finer than rest!<br>
+    Sweet potatoes baked golden, so fluffy, so warm,<br>
+    And berries and oranges, full of bright charm.</p>
+  </div>
+
+  <div class="stanza" data-stanza="19">
+    <p>"THIS!" beamed our Bob, "is what dinner should be:<br>
+    Real food from the field, from the cow, from the tree!<br>
+    Saturated fats, oh, how cozy, how sweet,<br>
+    And Mufas from olives to round out the treat!"</p>
+  </div>
+
+  <div class="stanza" data-stanza="20">
+    <p>"No seed oils to fool us! No Poufas to hide!<br>
+    Just food we can trust, with our family beside!<br>
+    So if you, dear reader, want food that is true,<br>
+    Cook like our Bob does, and good health comes to YOU!"</p>
+  </div>
+
+  <p class="the-end">The End.</p>
+
+</div>
+
+<script>
+  const stanzaData = [
+    "Now this is our Bob, with his golden blond beard, and his hair like the sun, oh, his hair is endeared. He lives with sweet Eve in a snug little spot, with their boy little Brennan, the best son they've got!",
+    "In Bob's tidy kitchen, with pots in a row, he cooks with real butter, all sunshine and glow! Or tallow from cows, melted creamy and bright, or olive oil green, what a wonderful sight!",
+    "These fats are the best ones! Bob cries with a grin. They're real and they're simple, no factory bin! Saturated fats keep our bodies so strong, and the Mufas help everything chug right along!",
+    "One bright sunny morning, Bob hopped with a shout, Let's go on a road trip! Let's pack and head out! To Twin Falls, Idaho, where the waterfalls roar! Grab snacks and your sneakers, let's head out the door!",
+    "So Eve packed the cooler and Brennan his toys, and off the three zoomed with the merriest noise. Past mountains and meadows, past rivers and pine, they reached the great Twin Falls, all sparkly and fine!",
+    "Hooray! cheered young Brennan, the mist and the spray! What a wonderful, marvelous, magical day! But soon tummies grumbled, the sun started low, Let's find us some supper! said Bob. Off we go!",
+    "They sat in a booth at a diner so bright, a young server came over with menus in sight. I'll have steak, Bob said kindly, but please understand, I'm sensitive to seed oils, they're sadly not grand.",
+    "Could you cook it in butter? Or tallow's just fine. Or olive oil's lovely; please, any of mine. Just no seed oils for me, please, if that's alright! The server blinked back with a curious slight fright.",
+    "Um, I don't really know how the kitchen cooks food, could you pick something first? Please don't think I'm rude. Then I'll go and ask what they cook with, you see? But you need to choose first, before checking with me!",
+    "Bob laughed just a smidge. But how can I pick, when the oil is the whole entire heart of the trick? If they fry it in seed oil, my tummy will say, I don't like this at all, and then ruin my day!",
+    "The server just stared, then she shrugged and walked back, she returned with a frown and a wobbly attack: The cook says, pick first, then we'll see what we use. You can read the whole menu! Just take it and choose!",
+    "Bob chuckled and turned to his Eve and his boy, You know, this seems silly, this round and round ploy. Those seed oils they use, when they heat them up high, they hurt all of us, that's not a joke or a lie!",
+    "They call it vegetable oil, now isn't that funny? There's no veggie inside, not a carrot or bunny! It's seeds that get crushed in a chemical mash, with heat and with bleach, and they ladle the splash!",
+    "So sensitive, sure, here's a truth like a song: We're all of us sensitive when they're cooked too long! But menus stay quiet, and kitchens stay hidden, and folks eat the oils that should really be forbidden.",
+    "The young server giggled, I'd never thought that! Let me check with the cook. Off she went in a chat. She came back: The fryer holds gallons of canola, the grill might be cleaner, but really, who knowla?",
+    "Bob ordered a salad, plain leaves on a plate, and he ate it with humor, no anger, no hate. At café and diner, the same tale would brew, What oil? they would ask. We just don't have a clue!",
+    "Sweet Eve squeezed Bob's hand, Soon home, dear, soon home, where you know each pan, where we're free to just roam! So back in the car, off the family did zoom, through Idaho sunsets, the whole sky in bloom.",
+    "When at last they pulled up to their cozy front door, Bob danced to the kitchen and danced some bit more! He flung wide the fridge, oh the wonders he found: Real butter! Real tallow! Good food all around!",
+    "He pulled out fresh eggs, low-Poufa, the best, and grass-fed beef steaks, much finer than rest! Sweet potatoes baked golden, so fluffy, so warm, and berries and oranges, full of bright charm.",
+    "This! beamed our Bob, is what dinner should be: Real food from the field, from the cow, from the tree! Saturated fats, oh, how cozy, how sweet, and Mufas from olives to round out the treat!",
+    "No seed oils to fool us! No Poufas to hide! Just food we can trust, with our family beside! So if you, dear reader, want food that is true, cook like our Bob does, and good health comes to YOU!"
+  ];
+
+  let voices = [];
+  let chosenVoice = null;
+  let isPlaying = false;
+
+  const playBtn = document.getElementById('playBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const statusEl = document.getElementById('audioStatus');
+
+  function loadVoices() {
+    voices = window.speechSynthesis.getVoices();
+    chosenVoice = voices.find(v => v.lang === 'en-GB' && /daniel/i.test(v.name))
+               || voices.find(v => v.lang === 'en-GB' && /male/i.test(v.name))
+               || voices.find(v => v.lang === 'en-GB' && /uk english/i.test(v.name))
+               || voices.find(v => v.lang === 'en-GB')
+               || voices.find(v => /^en-GB/i.test(v.lang))
+               || voices.find(v => /british/i.test(v.name));
+    if (chosenVoice) {
+      statusEl.textContent = 'British voice ready: ' + chosenVoice.name;
+    } else if (voices.length > 0) {
+      statusEl.textContent = 'No British voice found, using default.';
+    }
+  }
+
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  } else {
+    statusEl.textContent = 'Audio not supported in this browser.';
+    playBtn.disabled = true;
+  }
+
+  function highlightStanza(idx) {
+    document.querySelectorAll('.stanza').forEach(el => el.classList.remove('active'));
+    const el = document.querySelector('[data-stanza="' + idx + '"]');
+    if (el) {
+      el.classList.add('active');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function speakStanza(idx) {
+    if (idx >= stanzaData.length) { finishPlayback(); return; }
+    const u = new SpeechSynthesisUtterance(stanzaData[idx]);
+    if (chosenVoice) u.voice = chosenVoice;
+    u.rate = 0.92;
+    u.pitch = 1.08;
+    u.volume = 1;
+    u.onstart = () => {
+      highlightStanza(idx);
+      statusEl.textContent = 'Reading stanza ' + (idx + 1) + ' of ' + stanzaData.length;
+    };
+    u.onend = () => {
+      if (isPlaying) speakStanza(idx + 1);
+    };
+    u.onerror = () => {
+      statusEl.textContent = 'Audio error, try again?';
+      finishPlayback();
+    };
+    window.speechSynthesis.speak(u);
+  }
+
+  function startPlayback() {
+    if (isPlaying) return;
+    if (!('speechSynthesis' in window)) return;
+    if (voices.length === 0) loadVoices();
+    isPlaying = true;
+    playBtn.classList.add('playing');
+    window.speechSynthesis.cancel();
+    speakStanza(0);
+  }
+
+  function finishPlayback() {
+    isPlaying = false;
+    playBtn.classList.remove('playing');
+    document.querySelectorAll('.stanza').forEach(el => el.classList.remove('active'));
+    statusEl.textContent = 'The end! Tap play to read again.';
+  }
+
+  function stopPlayback() {
+    isPlaying = false;
+    window.speechSynthesis.cancel();
+    playBtn.classList.remove('playing');
+    document.querySelectorAll('.stanza').forEach(el => el.classList.remove('active'));
+    statusEl.textContent = 'Stopped. Tap play to start over.';
+  }
+
+  playBtn.addEventListener('click', startPlayback);
+  stopBtn.addEventListener('click', stopPlayback);
+</script>
+
+</body>
+</html>

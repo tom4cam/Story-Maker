@@ -1,5 +1,5 @@
 // The end to end story build pipeline. Lives here so it can be shared by
-// createStory (from answers) and updateStory (from edited paragraphs).
+// the createStory + createWorker-background pair and by updateStory.
 
 import { randomUUID } from 'node:crypto';
 import { generateStory, regenerateImagePrompt } from './anthropic';
@@ -8,6 +8,13 @@ import { generateImage } from './fal';
 import { moderate } from './moderation';
 import { saveStoryVersion, storeMedia } from './storage';
 import type { GeneratedStory, Paragraph, StoryAnswer, StoryVersion } from './types';
+
+export class ModerationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ModerationError';
+  }
+}
 
 // Run moderation against every answer. Throws if any input is flagged.
 export async function moderateAnswers(answers: StoryAnswer[]): Promise<void> {
@@ -20,11 +27,48 @@ export async function moderateAnswers(answers: StoryAnswer[]): Promise<void> {
   }
 }
 
-export class ModerationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ModerationError';
-  }
+// Write a "generating" placeholder so the UI can poll and show a loading
+// state. We deliberately don't touch the {id}/index.json record yet, so
+// the home page list does not include unfinished stories.
+export async function saveGeneratingStub(opts: {
+  id: string;
+  version: number;
+  sourceAnswers: StoryAnswer[];
+}): Promise<StoryVersion> {
+  const stub: StoryVersion = {
+    id: opts.id,
+    version: opts.version,
+    title: 'Your new story',
+    paragraphs: [],
+    narration_url: null,
+    source_answers: opts.sourceAnswers,
+    created_at: new Date().toISOString(),
+    status: 'generating',
+  };
+  await saveStoryVersion(stub);
+  return stub;
+}
+
+// Mark a generating record as failed so the UI can show a friendly message
+// instead of polling forever.
+export async function saveFailedVersion(opts: {
+  id: string;
+  version: number;
+  sourceAnswers: StoryAnswer[];
+  error: string;
+}): Promise<void> {
+  const rec: StoryVersion = {
+    id: opts.id,
+    version: opts.version,
+    title: 'Story did not finish',
+    paragraphs: [],
+    narration_url: null,
+    source_answers: opts.sourceAnswers,
+    created_at: new Date().toISOString(),
+    status: 'failed',
+    error: opts.error,
+  };
+  await saveStoryVersion(rec);
 }
 
 interface BuildOptions {
@@ -35,13 +79,13 @@ interface BuildOptions {
   paragraphs: { text: string; image_prompt?: string; image_url: string | null; regenerate_image?: boolean }[];
 }
 
-// Builds and saves a StoryVersion: generates any missing images, synthesizes
-// fresh narration audio, and writes everything to blob storage.
+// Builds the assets (any missing images + fresh narration audio) and saves
+// the story as the canonical {id}/v{n}.json record plus updating the
+// {id}/index.json summary.
 export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVersion> {
   const id = opts.id ?? randomUUID();
   const title = opts.title?.trim() || 'A Brand New Story';
 
-  // Decide which paragraphs need a new image.
   const tasks = opts.paragraphs.map(async (p, i) => {
     const needsImage = p.regenerate_image || !p.image_url;
     if (!needsImage) {
@@ -56,9 +100,9 @@ export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVers
   });
 
   const narrationText = opts.paragraphs.map((p) => p.text).join('\n\n');
-  const narrationTask = synthesize(narrationText).then(async (audio) => {
-    return storeMedia(`${id}-v${opts.version}.mp3`, audio, 'audio/mpeg');
-  });
+  const narrationTask = synthesize(narrationText).then((audio) =>
+    storeMedia(`${id}-v${opts.version}.mp3`, audio, 'audio/mpeg')
+  );
 
   const [paragraphs, narrationUrl] = await Promise.all([Promise.all(tasks), narrationTask]);
 
@@ -70,16 +114,19 @@ export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVers
     narration_url: narrationUrl,
     source_answers: opts.sourceAnswers,
     created_at: new Date().toISOString(),
+    status: 'ready',
   };
   await saveStoryVersion(version);
   return version;
 }
 
-// Generate a story from raw answers (moderates first), then build the assets.
-export async function buildFromAnswers(answers: StoryAnswer[]): Promise<StoryVersion> {
+// Generates a story from the kid's answers (moderates first), then builds
+// the assets. Throws ModerationError if anything is flagged.
+export async function buildFromAnswers(id: string, answers: StoryAnswer[]): Promise<StoryVersion> {
   await moderateAnswers(answers);
   const generated = await safelyGenerate(answers);
   return buildAndSaveVersion({
+    id,
     version: 1,
     title: generated.title,
     sourceAnswers: answers,
@@ -93,7 +140,6 @@ export async function buildFromAnswers(answers: StoryAnswer[]): Promise<StoryVer
 
 async function safelyGenerate(answers: StoryAnswer[]): Promise<GeneratedStory> {
   const generated = await generateStory(answers);
-  // Second layer of safety: moderate the generated story text too.
   const fullText = `${generated.title}\n\n${generated.paragraphs.map((p) => p.text).join('\n\n')}`;
   const result = await moderate(fullText);
   if (result.flagged) {
