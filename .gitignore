@@ -24,5 +24,9 @@ dist/
 *.log
 npm-debug.log*
 
+# Leftover reference content from the original single page version. Kept
+# on disk locally but not part of the deployed app.
+/html/
+
 # Testing
 coverage/
