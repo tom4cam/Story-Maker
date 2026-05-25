@@ -24,6 +24,7 @@ export interface StoryVersion {
   created_at: string;
   status: StoryStatus;
   error?: string;
+  language: 'en' | 'sv';
 }
 
 export interface StorySummary {
