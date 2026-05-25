@@ -7,6 +7,7 @@ interface WorkerRequest {
   version: number;
   answers: StoryAnswer[];
   language: 'en' | 'sv';
+  voiceId?: string;
 }
 
 // Background worker: runs the actual story generation pipeline. Netlify
@@ -30,7 +31,7 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
     return new Response('bad request', { status: 400 });
   }
   try {
-    const story = await buildFromAnswers(body.id, body.answers, body.language);
+    const story = await buildFromAnswers(body.id, body.answers, body.language, body.voiceId);
     console.log('story built', story.id, story.title, story.paragraphs.length, 'paragraphs');
   } catch (e) {
     const message = e instanceof ModerationError
@@ -44,6 +45,7 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
         sourceAnswers: body.answers,
         error: message,
         language: body.language,
+        voiceId: body.voiceId,
       });
     } catch (saveErr) {
       console.error('Could not record failure state', saveErr);

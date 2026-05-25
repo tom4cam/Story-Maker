@@ -19,9 +19,14 @@ interface ElevenLabsTimestampedResponse {
   normalized_alignment?: CharacterAlignment;
 }
 
-export async function synthesize(text: string): Promise<SynthResult> {
+export interface SynthOpts {
+  voiceId?: string;
+  speed?: number;
+}
+
+export async function synthesize(text: string, opts: SynthOpts = {}): Promise<SynthResult> {
   const apiKey = requireEnv('ELEVENLABS_API_KEY');
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID;
+  const voiceId = opts.voiceId || process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID;
   const res = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/with-timestamps`,
     {
@@ -39,6 +44,7 @@ export async function synthesize(text: string): Promise<SynthResult> {
           similarity_boost: 0.75,
           style: 0.15,
           use_speaker_boost: true,
+          ...(opts.speed != null ? { speed: opts.speed } : {}),
         },
       }),
     }

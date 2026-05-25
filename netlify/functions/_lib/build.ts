@@ -36,6 +36,7 @@ export async function saveGeneratingStub(opts: {
   version: number;
   sourceAnswers: StoryAnswer[];
   language: 'en' | 'sv';
+  voiceId?: string;
 }): Promise<StoryVersion> {
   const stub: StoryVersion = {
     id: opts.id,
@@ -47,6 +48,7 @@ export async function saveGeneratingStub(opts: {
     created_at: new Date().toISOString(),
     status: 'generating',
     language: opts.language,
+    ...(opts.voiceId ? { voice_id: opts.voiceId } : {}),
   };
   await saveStoryVersion(stub);
   return stub;
@@ -60,6 +62,7 @@ export async function saveFailedVersion(opts: {
   sourceAnswers: StoryAnswer[];
   error: string;
   language: 'en' | 'sv';
+  voiceId?: string;
 }): Promise<void> {
   const rec: StoryVersion = {
     id: opts.id,
@@ -72,6 +75,7 @@ export async function saveFailedVersion(opts: {
     status: 'failed',
     error: opts.error,
     language: opts.language,
+    ...(opts.voiceId ? { voice_id: opts.voiceId } : {}),
   };
   await saveStoryVersion(rec);
 }
@@ -82,6 +86,7 @@ interface BuildOptions {
   title?: string;
   sourceAnswers: StoryAnswer[];
   language: 'en' | 'sv';
+  voiceId?: string;
   paragraphs: { text: string; image_prompt?: string; image_url: string | null; regenerate_image?: boolean }[];
 }
 
@@ -107,7 +112,7 @@ export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVers
 
   const paragraphTexts = opts.paragraphs.map((p) => p.text);
   const narrationText = paragraphTexts.join('\n\n');
-  const narrationTask = synthesize(narrationText).then(async ({ audio, alignment }) => {
+  const narrationTask = synthesize(narrationText, { voiceId: opts.voiceId }).then(async ({ audio, alignment }) => {
     const url = await storeMedia(`${id}-v${opts.version}.mp3`, audio, 'audio/mpeg');
     const words = charsToWords(paragraphTexts, alignment);
     return { url, words };
@@ -126,6 +131,7 @@ export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVers
     status: 'ready',
     language: opts.language,
     narration_words: narration.words,
+    ...(opts.voiceId ? { voice_id: opts.voiceId } : {}),
   };
   await saveStoryVersion(version);
   return version;
@@ -133,7 +139,12 @@ export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVers
 
 // Generates a story from the kid's answers (moderates first), then builds
 // the assets. Throws ModerationError if anything is flagged.
-export async function buildFromAnswers(id: string, answers: StoryAnswer[], language: 'en' | 'sv'): Promise<StoryVersion> {
+export async function buildFromAnswers(
+  id: string,
+  answers: StoryAnswer[],
+  language: 'en' | 'sv',
+  voiceId?: string
+): Promise<StoryVersion> {
   await moderateAnswers(answers);
   const generated = await safelyGenerate(answers, language);
   return buildAndSaveVersion({
@@ -142,6 +153,7 @@ export async function buildFromAnswers(id: string, answers: StoryAnswer[], langu
     title: generated.title,
     sourceAnswers: answers,
     language,
+    voiceId,
     paragraphs: generated.paragraphs.map((p) => ({
       text: p.text,
       image_prompt: p.image_prompt,

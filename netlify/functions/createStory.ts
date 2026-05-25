@@ -7,6 +7,7 @@ import { badRequest, json, readJson, serverError } from './_lib/util';
 interface CreateStoryRequest {
   answers: StoryAnswer[];
   language: 'en' | 'sv';
+  voice_id?: string;
 }
 
 // Synchronous trigger: validates input, runs moderation, writes a pending
@@ -41,9 +42,11 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
     return serverError((e as Error).message);
   }
 
+  const voiceId = typeof body.voice_id === 'string' && body.voice_id ? body.voice_id : undefined;
+
   const id = randomUUID();
   try {
-    await saveGeneratingStub({ id, version: 1, sourceAnswers: trimmed, language: body.language });
+    await saveGeneratingStub({ id, version: 1, sourceAnswers: trimmed, language: body.language, voiceId });
   } catch (e) {
     console.error('saveGeneratingStub failed', e);
     return serverError((e as Error).message);
@@ -55,7 +58,7 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
     await fetch(`${siteUrl}/.netlify/functions/createWorker-background`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, version: 1, answers: trimmed, language: body.language }),
+      body: JSON.stringify({ id, version: 1, answers: trimmed, language: body.language, voiceId }),
     });
   } catch (e) {
     console.error('Failed to dispatch background worker', e);
@@ -67,5 +70,6 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
     title: 'Your new story', paragraphs: [], narration_url: null,
     source_answers: trimmed, created_at: new Date().toISOString(),
     language: body.language,
+    ...(voiceId ? { voice_id: voiceId } : {}),
   }, 202);
 };

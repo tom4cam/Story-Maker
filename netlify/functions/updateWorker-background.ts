@@ -8,6 +8,7 @@ interface WorkerRequest {
   title: string;
   sourceAnswers: StoryAnswer[];
   language: 'en' | 'sv';
+  voiceId?: string;
   paragraphs: { text: string; image_url: string | null; image_prompt?: string; regenerate_image?: boolean }[];
 }
 
@@ -30,6 +31,7 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
       title: body.title,
       sourceAnswers: body.sourceAnswers,
       language: body.language,
+      voiceId: body.voiceId,
       paragraphs: body.paragraphs,
     });
     console.log('story updated', story.id, 'v' + story.version);
@@ -41,6 +43,7 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
         version: body.version,
         sourceAnswers: body.sourceAnswers,
         language: body.language,
+        voiceId: body.voiceId,
         error: `Something went wrong while saving the new version: ${(e as Error).message}`,
       });
     } catch (saveErr) {
