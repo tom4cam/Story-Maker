@@ -61,7 +61,8 @@ export interface ListenHandle {
 
 export function listenOnce(
   onResult: (transcript: string) => void,
-  onError?: (err: string) => void
+  onError?: (err: string) => void,
+  opts?: { lang?: string }
 ): ListenHandle | null {
   const Ctor = getRecognitionCtor();
   if (!Ctor) {
@@ -69,7 +70,7 @@ export function listenOnce(
     return null;
   }
   const r = new Ctor();
-  r.lang = 'en-US';
+  r.lang = opts?.lang ?? 'en-US';
   r.interimResults = false;
   r.maxAlternatives = 1;
   r.continuous = false;

@@ -6,9 +6,10 @@ interface Props {
   onChange: (v: string) => void;
   placeholder?: string;
   ariaLabel: string;
+  language: 'en' | 'sv';
 }
 
-export function MicInput({ value, onChange, placeholder, ariaLabel }: Props) {
+export function MicInput({ value, onChange, placeholder, ariaLabel, language }: Props) {
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const handleRef = useRef<ListenHandle | null>(null);
@@ -19,6 +20,7 @@ export function MicInput({ value, onChange, placeholder, ariaLabel }: Props) {
   const startListening = () => {
     setError(null);
     setListening(true);
+    const sttLang = language === 'sv' ? 'sv-SE' : 'en-US';
     handleRef.current = listenOnce(
       (transcript) => {
         setListening(false);
@@ -27,7 +29,8 @@ export function MicInput({ value, onChange, placeholder, ariaLabel }: Props) {
       (err) => {
         setListening(false);
         setError(err);
-      }
+      },
+      { lang: sttLang }
     );
     if (!handleRef.current) setListening(false);
   };
