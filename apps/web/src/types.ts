@@ -35,6 +35,7 @@ export interface StoryVersion {
   language: 'en' | 'sv';
   narration_words?: WordTiming[];
   voice_id?: string;
+  summary?: string;
 }
 
 export interface StorySummary {

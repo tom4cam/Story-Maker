@@ -87,6 +87,12 @@ interface BuildOptions {
   sourceAnswers: StoryAnswer[];
   language: 'en' | 'sv';
   voiceId?: string;
+  /**
+   * Optional editor-supplied story + character summary. When present, it's
+   * prepended to every image prompt sent to Fal so character appearance
+   * (hair color, age, clothing, etc.) stays consistent across regenerations.
+   */
+  summary?: string;
   paragraphs: { text: string; image_prompt?: string; image_url: string | null; regenerate_image?: boolean }[];
 }
 
@@ -124,9 +130,13 @@ export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVers
       if (!needsImage) {
         return { text: p.text, image_url: p.image_url, image_prompt: p.image_prompt } satisfies Paragraph;
       }
-      const prompt = p.image_prompt && p.image_prompt.trim().length > 0
+      const basePrompt = p.image_prompt && p.image_prompt.trim().length > 0
         ? p.image_prompt
         : await regenerateImagePrompt(p.text, title);
+      const summary = opts.summary?.trim();
+      const prompt = summary
+        ? `Cartoon illustration. Characters: ${summary} Scene: ${basePrompt} Style: bright colors, friendly faces, cartoon style, no text in the image.`
+        : basePrompt;
       const img = await generateImage(prompt);
       const url = await storeMedia(`${id}-v${opts.version}-p${i + 1}.png`, img.data, img.contentType);
       return { text: p.text, image_url: url, image_prompt: prompt } satisfies Paragraph;
@@ -148,6 +158,7 @@ export async function buildAndSaveVersion(opts: BuildOptions): Promise<StoryVers
     language: opts.language,
     narration_words: narration.words,
     ...(opts.voiceId ? { voice_id: opts.voiceId } : {}),
+    ...(opts.summary && opts.summary.trim() ? { summary: opts.summary.trim() } : {}),
   };
   await saveStoryVersion(version);
   return version;

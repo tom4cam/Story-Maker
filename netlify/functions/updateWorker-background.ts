@@ -9,6 +9,7 @@ interface WorkerRequest {
   sourceAnswers: StoryAnswer[];
   language: 'en' | 'sv';
   voiceId?: string;
+  summary?: string;
   paragraphs: { text: string; image_url: string | null; image_prompt?: string; regenerate_image?: boolean }[];
 }
 
@@ -32,6 +33,7 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
       sourceAnswers: body.sourceAnswers,
       language: body.language,
       voiceId: body.voiceId,
+      summary: body.summary,
       paragraphs: body.paragraphs,
     });
     console.log('story updated', story.id, 'v' + story.version);

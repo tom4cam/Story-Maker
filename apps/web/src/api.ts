@@ -45,12 +45,13 @@ export async function listStories(): Promise<StorySummary[]> {
 export async function updateStory(
   id: string,
   paragraphs: { text: string; image_url: string | null; image_prompt?: string; regenerate_image?: boolean }[],
-  title: string
+  title: string,
+  summary: string
 ): Promise<StoryVersion> {
   const res = await fetch(`${FN_BASE}/updateStory`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, paragraphs, title }),
+    body: JSON.stringify({ id, paragraphs, title, summary }),
   });
   return jsonOrThrow<StoryVersion>(res);
 }

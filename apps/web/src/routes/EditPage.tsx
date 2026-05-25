@@ -15,6 +15,7 @@ export function EditPage() {
   const navigate = useNavigate();
   const [story, setStory] = useState<StoryVersion | null>(null);
   const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
   const [paragraphs, setParagraphs] = useState<DraftParagraph[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,6 +27,7 @@ export function EditPage() {
       .then((s) => {
         setStory(s);
         setTitle(s.title);
+        setSummary(s.summary ?? '');
         setParagraphs(s.paragraphs.map((p) => ({ ...p })));
       })
       .catch((e) => setError((e as Error).message))
@@ -49,7 +51,8 @@ export function EditPage() {
           image_prompt: p.image_prompt,
           regenerate_image: !!p.regenerate_image,
         })),
-        title
+        title,
+        summary
       );
       navigate(`/s/${next.id}/v/${next.version}`);
     } catch (e) {
@@ -83,6 +86,18 @@ export function EditPage() {
       <div className="card">
         <label className="question" htmlFor="title">{t('edit.titleLabel')}</label>
         <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+
+      <div className="card">
+        <label className="question" htmlFor="summary">{t('edit.summaryLabel')}</label>
+        <p className="subtle">{t('edit.summaryHint')}</p>
+        <textarea
+          id="summary"
+          value={summary}
+          rows={5}
+          onChange={(e) => setSummary(e.target.value)}
+          placeholder={t('edit.summaryPlaceholder')}
+        />
       </div>
 
       {paragraphs.map((p, i) => (

@@ -6,6 +6,7 @@ import { badRequest, json, notFound, readJson, serverError } from './_lib/util';
 interface UpdateStoryRequest {
   id: string;
   title: string;
+  summary?: string;
   paragraphs: { text: string; image_url: string | null; image_prompt?: string; regenerate_image?: boolean }[];
 }
 
@@ -30,6 +31,9 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
 
   const language = previous.language ?? 'en';
   const voiceId = previous.voice_id;
+  // Editor explicitly controls summary; fall back to previous value if
+  // the field wasn't sent.
+  const summary = typeof body.summary === 'string' ? body.summary : (previous.summary ?? '');
   const nextVersion = idx.latest_version + 1;
   try {
     await saveGeneratingStub({
@@ -56,6 +60,7 @@ export default async (req: Request, _ctx: Context): Promise<Response> => {
         sourceAnswers: previous.source_answers ?? [],
         language,
         voiceId,
+        summary,
         paragraphs: body.paragraphs.map((p) => ({
           text: p.text,
           image_url: p.image_url ?? null,
