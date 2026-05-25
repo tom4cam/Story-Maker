@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { getStory } from '../api';
+import { useLang, useT } from '../i18n';
 import type { StoryVersion } from '../types';
 
 const POLL_INTERVAL_MS = 3000;
 
 export function StoryPage() {
+  const t = useT();
+  const { lang } = useLang();
   const { id, version } = useParams<{ id: string; version?: string }>();
   const [story, setStory] = useState<StoryVersion | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +53,7 @@ export function StoryPage() {
       <Layout>
         <div className="card loading">
           <div className="spinner" />
-          <p>Opening the story...</p>
+          <p>{t('story.opening')}</p>
         </div>
       </Layout>
     );
@@ -59,8 +62,8 @@ export function StoryPage() {
   if (error || !story) {
     return (
       <Layout>
-        <div className="error">{error ?? 'Story not found.'}</div>
-        <Link to="/" className="btn">Back to home</Link>
+        <div className="error">{error ?? t('story.notFound')}</div>
+        <Link to="/" className="btn">{t('story.backHome')}</Link>
       </Layout>
     );
   }
@@ -70,11 +73,8 @@ export function StoryPage() {
       <Layout>
         <div className="card loading">
           <div className="spinner" />
-          <div className="question">Making your story...</div>
-          <p className="subtle">
-            Writing the words, drawing the pictures, and recording the voice.
-            This takes about a minute. The page will refresh on its own.
-          </p>
+          <div className="question">{t('story.makingTitle')}</div>
+          <p className="subtle">{t('story.makingHint')}</p>
         </div>
       </Layout>
     );
@@ -84,11 +84,11 @@ export function StoryPage() {
     return (
       <Layout>
         <div className="card">
-          <div className="question">Something went wrong.</div>
-          <p>{story.error ?? 'The story could not be made this time.'}</p>
+          <div className="question">{t('story.failedTitle')}</div>
+          <p>{story.error ?? t('story.failedDefault')}</p>
           <div className="row">
-            <Link to="/create" className="btn">Try a new one</Link>
-            <Link to="/" className="btn ghost">Back to home</Link>
+            <Link to="/create" className="btn">{t('story.tryNew')}</Link>
+            <Link to="/" className="btn ghost">{t('story.backHome')}</Link>
           </div>
         </div>
       </Layout>
@@ -101,7 +101,7 @@ export function StoryPage() {
     <Layout>
       <h1 className="story-title">{story.title}</h1>
       <div className="story-meta">
-        Version {story.version} (saved {formatDate(story.created_at)})
+        {t('story.versionPrefix')} {story.version} ({t('story.savedPrefix')} {formatDate(story.created_at, lang)})
       </div>
 
       {story.version > 1 && (
@@ -137,17 +137,18 @@ export function StoryPage() {
       ))}
 
       <div className="row" style={{ justifyContent: 'center', marginTop: 24 }}>
-        <Link to={`/s/${story.id}/edit`} className="btn secondary">Edit this story</Link>
-        <Link to="/create" className="btn">Make a new one</Link>
+        <Link to={`/s/${story.id}/edit`} className="btn secondary">{t('story.editLink')}</Link>
+        <Link to="/create" className="btn">{t('story.makeAnother')}</Link>
       </div>
     </Layout>
   );
 }
 
-function formatDate(s: string): string {
+function formatDate(s: string, lang: 'en' | 'sv'): string {
   try {
     const d = new Date(s);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const locale = lang === 'sv' ? 'sv-SE' : 'en-US';
+    return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
   } catch {
     return s;
   }

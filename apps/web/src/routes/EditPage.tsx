@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { getStory, updateStory } from '../api';
+import { useT } from '../i18n';
 import type { Paragraph, StoryVersion } from '../types';
 
 interface DraftParagraph extends Paragraph {
@@ -9,6 +10,7 @@ interface DraftParagraph extends Paragraph {
 }
 
 export function EditPage() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [story, setStory] = useState<StoryVersion | null>(null);
@@ -49,7 +51,6 @@ export function EditPage() {
         })),
         title
       );
-      // The update is now backgrounded; the story page will poll until ready.
       navigate(`/s/${next.id}/v/${next.version}`);
     } catch (e) {
       setSaving(false);
@@ -58,17 +59,17 @@ export function EditPage() {
   };
 
   if (loading) {
-    return <Layout><div className="card loading"><div className="spinner" /><p>Loading the story...</p></div></Layout>;
+    return <Layout><div className="card loading"><div className="spinner" /><p>{t('edit.loading')}</p></div></Layout>;
   }
   if (error || !story) {
-    return <Layout><div className="error">{error ?? 'Story not found.'}</div></Layout>;
+    return <Layout><div className="error">{error ?? t('edit.notFound')}</div></Layout>;
   }
   if (saving) {
     return (
       <Layout>
         <div className="card loading">
           <div className="spinner" />
-          <div className="question">Sending the changes...</div>
+          <div className="question">{t('edit.sending')}</div>
         </div>
       </Layout>
     );
@@ -76,22 +77,22 @@ export function EditPage() {
 
   return (
     <Layout>
-      <h1 className="story-title">Edit story</h1>
-      <p className="story-meta">Saving will create version {story.version + 1}.</p>
+      <h1 className="story-title">{t('edit.heading')}</h1>
+      <p className="story-meta">{t('edit.versionNote', { next: String(story.version + 1) })}</p>
 
       <div className="card">
-        <label className="question" htmlFor="title">Title</label>
+        <label className="question" htmlFor="title">{t('edit.titleLabel')}</label>
         <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
 
       {paragraphs.map((p, i) => (
         <div className="card" key={i}>
-          <div className="question">Paragraph {i + 1}</div>
+          <div className="question">{t('edit.paragraphLabel', { n: String(i + 1) })}</div>
           <textarea
             value={p.text}
             rows={5}
             onChange={(e) => updateParagraph(i, { text: e.target.value })}
-            aria-label={`Paragraph ${i + 1} text`}
+            aria-label={t('edit.paragraphLabel', { n: String(i + 1) })}
           />
           <div className="row" style={{ marginTop: 12 }}>
             <label className="row" style={{ gap: 8 }}>
@@ -100,20 +101,20 @@ export function EditPage() {
                 checked={!!p.regenerate_image}
                 onChange={(e) => updateParagraph(i, { regenerate_image: e.target.checked })}
               />
-              Regenerate this picture when I save
+              {t('edit.regenerateImage')}
             </label>
           </div>
           {p.image_url && !p.regenerate_image && (
             <div style={{ marginTop: 12 }}>
-              <img src={p.image_url} alt={`Illustration ${i + 1}`} style={{ maxWidth: 240, borderRadius: 16, border: '3px solid var(--ink)' }} />
+              <img src={p.image_url} alt={t('edit.paragraphLabel', { n: String(i + 1) })} style={{ maxWidth: 240, borderRadius: 16, border: '3px solid var(--ink)' }} />
             </div>
           )}
         </div>
       ))}
 
       <div className="row" style={{ justifyContent: 'center', marginTop: 24 }}>
-        <Link to={`/s/${story.id}`} className="btn ghost">Cancel</Link>
-        <button type="button" className="btn sun" onClick={save}>Save as new version</button>
+        <Link to={`/s/${story.id}`} className="btn ghost">{t('edit.cancel')}</Link>
+        <button type="button" className="btn sun" onClick={save}>{t('edit.save')}</button>
       </div>
     </Layout>
   );
