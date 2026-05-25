@@ -1,12 +1,10 @@
-# Brennan's Story Maker
+# Brennan & Linnéa's Story Maker
 
-A small web app that lets kids make their own illustrated, narrated stories.
-A kid answers a few simple questions (by voice or by typing), and the app
-writes a short story, draws a cartoon for each paragraph, and reads it out
-loud. Each story gets its own link, and stories can be edited into new
-versions later.
+A small web app that lets kids make their own illustrated, narrated stories in English or Swedish.
 
-Built for Brennan, by Tom Caswell.
+A kid picks a language, answers a few simple questions (by voice or by typing), and the app writes a short story, draws a cartoon for each paragraph, and reads it out loud. Each story gets its own link, and stories can be edited into new versions later.
+
+Built with love by Uncle Tom for Brennan and Linnéa's birthdays.
 
 ## How it works
 
@@ -44,6 +42,8 @@ Built for Brennan, by Tom Caswell.
 * Moderation: OpenAI omni-moderation-latest.
 * Speech in the browser: SpeechSynthesis (TTS for questions) and Web Speech
   API (STT for answers, with a typed fallback).
+* Languages: English and Swedish, picked per story. UI language is bilingual
+  and detected from the browser, overridable via the settings cog.
 
 ## Repository layout
 
