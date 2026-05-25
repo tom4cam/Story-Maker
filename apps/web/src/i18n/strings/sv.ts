@@ -1,0 +1,99 @@
+import type { StringKey } from './en';
+
+export const sv: Record<StringKey, string> = {
+  // Brand and dedication
+  'brand.name': 'Brennan & Linnéas Sagomakare',
+  'brand.tagline': 'Berätta en saga. Hör den. Se den.',
+  'dedication.line': 'Gjord med kärlek av farbror Tom till Brennans och Linnéas födelsedagar.',
+
+  // Home page
+  'home.heroTitle': 'Skapa en saga. Vad du vill.',
+  'home.heroBody': 'Välj en hjälte, välj en plats, välj ett problem. Sagomakaren skriver den, ritar den och läser den högt bara för dig.',
+  'home.heroCta': 'Börja en ny saga',
+  'home.recentHeading': 'Senaste sagorna',
+  'home.recentLoading': 'Laddar senaste sagorna...',
+  'home.recentEmpty': 'Inga sagor än. Tryck på den stora gula knappen för att skapa den första.',
+
+  // Create page chrome
+  'create.langStepTitle': 'Välj ett språk för din saga.',
+  'create.langStepEn': 'English',
+  'create.langStepSv': 'Svenska',
+  'create.hearAgain': 'Hör frågan igen',
+  'create.skipThis': 'Hoppa över',
+  'create.next': 'Nästa',
+  'create.saveAnswer': 'Spara svar',
+  'create.makeStory': 'Skapa min saga',
+  'create.required': 'Du behöver svara på den här.',
+  'create.optional': 'Den här är frivillig. Skriv mer om du vill, eller hoppa över.',
+  'create.soFar': 'Hittills:',
+  'create.allSet': 'Klart.',
+  'create.allSetHint': 'Tryck på "Skapa min saga" för att sätta ihop allt.',
+  'create.sending': 'Skickar iväg till sagoberättarna...',
+  'create.typeOrSpeak': 'Skriv eller säg ett svar först.',
+
+  // Question prompts
+  'q.hero.prompt': 'Vem är hjälten i din saga?',
+  'q.hero.spoken': 'Vem är hjälten i din saga? Säg ett namn och hur de är.',
+  'q.hero.placeholder': 'Exempel: en modig kanin som heter Pip och älskar kakor',
+  'q.setting.prompt': 'Var händer sagan?',
+  'q.setting.spoken': 'Var händer sagan?',
+  'q.setting.placeholder': 'Exempel: i en magisk skog, eller på ett piratskepp',
+  'q.goal.prompt': 'Vad vill eller behöver hjälten?',
+  'q.goal.spoken': 'Vad vill eller behöver hjälten?',
+  'q.goal.placeholder': 'Exempel: hitta världens största pannkaka',
+  'q.friend.prompt': 'Finns det en vän eller hjälpare? Vem är det?',
+  'q.friend.spoken': 'Finns det en vän eller hjälpare? Vem är det?',
+  'q.friend.placeholder': 'Exempel: en klok gammal sköldpadda som heter Sage',
+  'q.problem.prompt': 'Vilket problem ska de lösa?',
+  'q.problem.spoken': 'Vilket problem ska de lösa?',
+  'q.problem.placeholder': 'Exempel: bron till pannkaksberget är trasig',
+  'q.ending.prompt': 'Hur ska sagan sluta?',
+  'q.ending.spoken': 'Hur ska sagan sluta? Glatt, fånigt eller överraskande?',
+  'q.ending.placeholder': 'Exempel: glatt och fånigt, med en stor pannkaksfest',
+
+  // Story page
+  'story.opening': 'Öppnar sagan...',
+  'story.notFound': 'Sagan hittades inte.',
+  'story.backHome': 'Tillbaka till start',
+  'story.makingTitle': 'Skapar din saga...',
+  'story.makingHint': 'Skriver orden, ritar bilderna och spelar in rösten. Det tar ungefär en minut. Sidan uppdateras av sig själv.',
+  'story.failedTitle': 'Något gick fel.',
+  'story.failedDefault': 'Sagan kunde inte skapas den här gången.',
+  'story.tryNew': 'Pröva en ny',
+  'story.versionPrefix': 'Version',
+  'story.savedPrefix': 'sparad',
+  'story.editLink': 'Redigera den här sagan',
+  'story.makeAnother': 'Skapa en ny',
+
+  // Edit page
+  'edit.loading': 'Laddar sagan...',
+  'edit.notFound': 'Sagan hittades inte.',
+  'edit.sending': 'Skickar ändringarna...',
+  'edit.heading': 'Redigera saga',
+  'edit.versionNote': 'När du sparar skapas version {next}.',
+  'edit.titleLabel': 'Titel',
+  'edit.paragraphLabel': 'Stycke {n}',
+  'edit.regenerateImage': 'Rita om bilden när jag sparar',
+  'edit.cancel': 'Avbryt',
+  'edit.save': 'Spara som ny version',
+
+  // Not found page
+  'notFound.title': 'Den sidan tappade bort sig i skogen.',
+  'notFound.body': 'Vi går tillbaka och väljer en annan stig.',
+
+  // Mic / speech
+  'mic.start': 'Säg ditt svar',
+  'mic.stop': 'Sluta spela in',
+  'mic.unavailable': 'Röstinmatning fungerar inte i den här webbläsaren. Du kan fortfarande skriva svaret. (Chrome och Edge fungerar bäst för röst.)',
+  'mic.notHeard': 'Förlåt, jag hörde inte. Försök igen.',
+
+  // Settings cog
+  'settings.title': 'Inställningar',
+  'settings.language': 'Språk',
+  'settings.languageEn': 'English',
+  'settings.languageSv': 'Svenska',
+  'settings.close': 'Stäng',
+
+  // Errors
+  'error.generic': 'Något gick fel. Försök igen.',
+};
