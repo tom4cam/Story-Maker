@@ -19,6 +19,7 @@ export function StoryPage() {
   const pollingRef = useRef<number | null>(null);
   const audioRef = useRef<AudioBarRef | null>(null);
   const activeIndex = useAudioSync(audioRef, story?.narration_words);
+  const lastScrolledParaRef = useRef<number>(-1);
 
   useEffect(() => {
     if (!id) return;
@@ -51,6 +52,24 @@ export function StoryPage() {
       if (pollingRef.current) window.clearTimeout(pollingRef.current);
     };
   }, [id, version]);
+
+  // Toggle a body class while an audio bar is mounted, so global padding
+  // keeps the last paragraph from being hidden behind the bottom-fixed bar.
+  useEffect(() => {
+    if (!story?.narration_url) return;
+    document.body.classList.add('has-audio-bar');
+    return () => document.body.classList.remove('has-audio-bar');
+  }, [story?.narration_url]);
+
+  // Auto-scroll the active paragraph into view whenever it changes.
+  useEffect(() => {
+    if (activeIndex < 0 || !story?.narration_words) return;
+    const para = story.narration_words[activeIndex]?.paragraphIndex ?? -1;
+    if (para < 0 || para === lastScrolledParaRef.current) return;
+    lastScrolledParaRef.current = para;
+    const el = document.querySelector<HTMLElement>(`[data-para="${para}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeIndex, story?.narration_words]);
 
   if (loading) {
     return (
@@ -101,9 +120,9 @@ export function StoryPage() {
 
   const versionLinks = Array.from({ length: story.version }, (_, i) => i + 1);
   const words = story.narration_words;
-  const HALO = 2; // active + 2 on each side = 5-word window
-  const windowStart = activeIndex - HALO;
-  const windowEnd = activeIndex + HALO;
+  // Highlight just the active word plus the next one (2 words max).
+  const windowStart = activeIndex;
+  const windowEnd = activeIndex + 1;
 
   return (
     <Layout>
@@ -126,12 +145,8 @@ export function StoryPage() {
         </div>
       )}
 
-      {story.narration_url && (
-        <AudioBar ref={audioRef} src={story.narration_url} />
-      )}
-
       {story.paragraphs.map((p, i) => (
-        <div className={`paragraph ${i % 2 === 1 ? 'flip' : ''}`} key={i}>
+        <div className={`paragraph ${i % 2 === 1 ? 'flip' : ''}`} key={i} data-para={i}>
           <div className="p-image">
             {p.image_url
               ? <img src={p.image_url} alt={`Illustration for paragraph ${i + 1}`} />
@@ -147,6 +162,10 @@ export function StoryPage() {
         <Link to={`/s/${story.id}/edit`} className="btn secondary">{t('story.editLink')}</Link>
         <Link to="/create" className="btn">{t('story.makeAnother')}</Link>
       </div>
+
+      {story.narration_url && (
+        <AudioBar ref={audioRef} src={story.narration_url} />
+      )}
     </Layout>
   );
 }

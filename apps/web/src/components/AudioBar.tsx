@@ -24,18 +24,27 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
     const onPause = () => setIsPlaying(false);
     const onEnded = () => { setIsPlaying(false); setEnded(true); };
     const onTime = () => setCurrentTime(el.currentTime);
-    const onMeta = () => setDuration(el.duration || 0);
+    const onMeta = () => {
+      const d = Number.isFinite(el.duration) ? el.duration : 0;
+      if (d > 0) setDuration(d);
+    };
     el.addEventListener('play', onPlay);
     el.addEventListener('pause', onPause);
     el.addEventListener('ended', onEnded);
     el.addEventListener('timeupdate', onTime);
     el.addEventListener('loadedmetadata', onMeta);
+    el.addEventListener('durationchange', onMeta);
+    el.addEventListener('canplay', onMeta);
+    // Some browsers populate duration synchronously when src is set.
+    onMeta();
     return () => {
       el.removeEventListener('play', onPlay);
       el.removeEventListener('pause', onPause);
       el.removeEventListener('ended', onEnded);
       el.removeEventListener('timeupdate', onTime);
       el.removeEventListener('loadedmetadata', onMeta);
+      el.removeEventListener('durationchange', onMeta);
+      el.removeEventListener('canplay', onMeta);
     };
   }, []);
 
