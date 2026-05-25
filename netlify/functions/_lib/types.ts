@@ -13,6 +13,14 @@ export interface StoryAnswer {
 
 export type StoryStatus = 'generating' | 'ready' | 'failed';
 
+export interface WordTiming {
+  paragraphIndex: number;
+  wordIndex: number;
+  word: string;
+  start: number;
+  end: number;
+}
+
 export interface StoryVersion {
   id: string;
   version: number;
@@ -24,6 +32,7 @@ export interface StoryVersion {
   status: StoryStatus;
   error?: string;
   language: 'en' | 'sv';
+  narration_words?: WordTiming[];
 }
 
 export interface StoryIndex {
