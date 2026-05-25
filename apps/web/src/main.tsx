@@ -6,19 +6,22 @@ import { CreatePage } from './routes/CreatePage';
 import { StoryPage } from './routes/StoryPage';
 import { EditPage } from './routes/EditPage';
 import { NotFoundPage } from './routes/NotFoundPage';
+import { LangProvider } from './i18n';
 import './styles.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/create" element={<CreatePage />} />
-        <Route path="/s/:id" element={<StoryPage />} />
-        <Route path="/s/:id/v/:version" element={<StoryPage />} />
-        <Route path="/s/:id/edit" element={<EditPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </BrowserRouter>
+    <LangProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/create" element={<CreatePage />} />
+          <Route path="/s/:id" element={<StoryPage />} />
+          <Route path="/s/:id/v/:version" element={<StoryPage />} />
+          <Route path="/s/:id/edit" element={<EditPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </BrowserRouter>
+    </LangProvider>
   </React.StrictMode>
 );
