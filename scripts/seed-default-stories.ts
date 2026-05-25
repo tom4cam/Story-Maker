@@ -11,7 +11,7 @@ import { buildAndSaveVersion } from '../netlify/functions/_lib/build';
 import { regenerateImagePrompt } from '../netlify/functions/_lib/anthropic';
 import { generateImage } from '../netlify/functions/_lib/fal';
 import { storeMedia } from '../netlify/functions/_lib/storage';
-import { BOB_TITLE, BOB_STANZAS } from './data/bob-source';
+import { BOB_TITLE, BOB_STANZAS, BOB_CHARACTERS } from './data/bob-source';
 import { PIP_TITLE_EN, PIP_PARAGRAPHS_EN } from './data/pip-source';
 
 const FAL_CONCURRENCY = 6; // Fal free tier caps at 10 concurrent
@@ -82,10 +82,13 @@ async function seedBob() {
   console.log('Seeding Bob...');
   console.log('  generating image prompts...');
   const promptedParas = await Promise.all(
-    BOB_STANZAS.map(async (text) => ({
-      text,
-      image_prompt: await regenerateImagePrompt(text, BOB_TITLE),
-    }))
+    BOB_STANZAS.map(async (text) => {
+      const sceneOnly = await regenerateImagePrompt(text, BOB_TITLE);
+      // Prepend the character anchors so Bob and Brennan render
+      // consistently across all 20 images (both blond, Bob has a beard).
+      const image_prompt = `Cartoon illustration. Characters: ${BOB_CHARACTERS} Scene: ${sceneOnly} Style: bright colors, friendly faces, cartoon style, no text in the image.`;
+      return { text, image_prompt };
+    })
   );
   console.log('  generating images (batched)...');
   const urls = await generateImagesBatched(BOB_ID, 1, promptedParas.map((p) => p.image_prompt));
@@ -135,8 +138,12 @@ async function main() {
     console.error('Missing env vars:', missing.join(', '));
     process.exit(1);
   }
-  await seedBob();
-  await seedPipSwedish();
+  // Optional --only=bob|pip to re-seed just one story without spending
+  // credits on the other.
+  const onlyArg = process.argv.find((a) => a.startsWith('--only='));
+  const only = onlyArg ? onlyArg.slice('--only='.length) : null;
+  if (!only || only === 'bob') await seedBob();
+  if (!only || only === 'pip') await seedPipSwedish();
   console.log('Done.');
 }
 

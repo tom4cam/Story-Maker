@@ -4,6 +4,13 @@
 
 export const BOB_TITLE = "Bob's Big Butter Adventure";
 
+// Character anchors woven into every image prompt so Fal renders Bob
+// and Brennan consistently across all 20 illustrations.
+export const BOB_CHARACTERS =
+  "Bob is a cheerful man with bright golden blond hair and a full golden blond beard, wearing a cozy chef apron. " +
+  "Brennan is his small young son, also with bright golden blond hair, no beard. " +
+  "Eve is Bob's kind wife with brown hair. They all have friendly faces.";
+
 export const BOB_STANZAS: string[] = [
   "Now this is our Bob, with his golden blond beard, and his hair like the sun, oh, his hair is endeared. He lives with sweet Eve in a snug little spot, with their boy little Brennan, the best son they've got!",
   "In Bob's tidy kitchen, with pots in a row, he cooks with real butter, all sunshine and glow! Or tallow from cows, melted creamy and bright, or olive oil green, what a wonderful sight!",
