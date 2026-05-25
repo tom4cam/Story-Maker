@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
+import { AudioBar, type AudioBarRef } from '../components/AudioBar';
 import { getStory } from '../api';
+import { useAudioSync } from '../audioSync';
 import { useLang, useT } from '../i18n';
-import type { StoryVersion } from '../types';
+import type { StoryVersion, WordTiming } from '../types';
 
 const POLL_INTERVAL_MS = 10000;
 
@@ -15,6 +17,8 @@ export function StoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const pollingRef = useRef<number | null>(null);
+  const audioRef = useRef<AudioBarRef | null>(null);
+  const activeIndex = useAudioSync(audioRef, story?.narration_words);
 
   useEffect(() => {
     if (!id) return;
@@ -96,6 +100,10 @@ export function StoryPage() {
   }
 
   const versionLinks = Array.from({ length: story.version }, (_, i) => i + 1);
+  const words = story.narration_words;
+  const HALO = 2; // active + 2 on each side = 5-word window
+  const windowStart = activeIndex - HALO;
+  const windowEnd = activeIndex + HALO;
 
   return (
     <Layout>
@@ -119,10 +127,7 @@ export function StoryPage() {
       )}
 
       {story.narration_url && (
-        <div className="audio-bar">
-          <span aria-hidden="true" style={{ fontSize: 28 }}>{'\u{1F509}'}</span>
-          <audio controls src={story.narration_url} preload="metadata" />
-        </div>
+        <AudioBar ref={audioRef} src={story.narration_url} />
       )}
 
       {story.paragraphs.map((p, i) => (
@@ -132,7 +137,9 @@ export function StoryPage() {
               ? <img src={p.image_url} alt={`Illustration for paragraph ${i + 1}`} />
               : <div className="placeholder">No picture for this part.</div>}
           </div>
-          <div className="p-text">{p.text}</div>
+          <div className="p-text">
+            {renderParagraph(p.text, i, words, activeIndex, windowStart, windowEnd, audioRef)}
+          </div>
         </div>
       ))}
 
@@ -142,6 +149,52 @@ export function StoryPage() {
       </div>
     </Layout>
   );
+}
+
+function renderParagraph(
+  text: string,
+  paragraphIndex: number,
+  words: WordTiming[] | undefined,
+  activeIndex: number,
+  windowStart: number,
+  windowEnd: number,
+  audioRef: React.RefObject<HTMLAudioElement | null>
+) {
+  if (!words || words.length === 0) {
+    return text;
+  }
+  const flatIndexes: number[] = [];
+  const wordsForPara: WordTiming[] = [];
+  for (let i = 0; i < words.length; i += 1) {
+    if (words[i].paragraphIndex === paragraphIndex) {
+      flatIndexes.push(i);
+      wordsForPara.push(words[i]);
+    }
+  }
+  if (wordsForPara.length === 0) return text;
+
+  return wordsForPara.map((w, localIdx) => {
+    const flatIdx = flatIndexes[localIdx];
+    const isCurrent = flatIdx >= windowStart && flatIdx <= windowEnd && activeIndex >= 0;
+    return (
+      <span key={`${w.paragraphIndex}-${w.wordIndex}`}>
+        <button
+          type="button"
+          className={`word${isCurrent ? ' is-current' : ''}`}
+          data-pw={`${w.paragraphIndex}-${w.wordIndex}`}
+          onClick={() => {
+            const el = audioRef.current;
+            if (!el) return;
+            el.currentTime = w.start;
+            void el.play();
+          }}
+        >
+          {w.word}
+        </button>
+        {localIdx < wordsForPara.length - 1 ? ' ' : ''}
+      </span>
+    );
+  });
 }
 
 function formatDate(s: string, lang: 'en' | 'sv'): string {
