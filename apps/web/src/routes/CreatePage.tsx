@@ -2,10 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { MicInput } from '../components/MicInput';
-import { createStory } from '../api';
-import { cancelSpeech, speak } from '../speech';
+import { VoicePicker } from '../components/VoicePicker';
+import { HelpYesNo } from '../components/HelpYesNo';
+import { createStory, moderateText } from '../api';
+import { cancelSpeech, speakBest, stopAskVoice } from '../speech';
 import { useLang, useT } from '../i18n';
 import type { Lang } from '../i18n';
+import { usePrefs } from '../prefs';
+import { defaultVoiceFor, findVoiceByKey, VOICES } from '../voices';
+import { QUESTION_HELPERS } from '../createHelpers';
 import type { StoryAnswer } from '../types';
 import type { StringKey } from '../i18n/strings/en';
 
@@ -17,9 +22,6 @@ interface Question {
   required: boolean;
 }
 
-// The first three are required. The remaining ones are offered as optional
-// extras once the kid has the basics; this matches the spec's "2 to 6
-// adaptive questions" intent.
 const QUESTIONS: Question[] = [
   { id: 'hero', promptKey: 'q.hero.prompt', spokenKey: 'q.hero.spoken', placeholderKey: 'q.hero.placeholder', required: true },
   { id: 'setting', promptKey: 'q.setting.prompt', spokenKey: 'q.setting.spoken', placeholderKey: 'q.setting.placeholder', required: true },
@@ -29,41 +31,88 @@ const QUESTIONS: Question[] = [
   { id: 'ending', promptKey: 'q.ending.prompt', spokenKey: 'q.ending.spoken', placeholderKey: 'q.ending.placeholder', required: false },
 ];
 
+const OPENER_CHIPS: { id: string; labelKey: StringKey }[] = [
+  { id: 'adventure', labelKey: 'opener.chip.adventure' },
+  { id: 'silly',     labelKey: 'opener.chip.silly' },
+  { id: 'animals',   labelKey: 'opener.chip.animals' },
+  { id: 'bedtime',   labelKey: 'opener.chip.bedtime' },
+  { id: 'magic',     labelKey: 'opener.chip.magic' },
+  { id: 'mystery',   labelKey: 'opener.chip.mystery' },
+  { id: 'surprise',  labelKey: 'opener.chip.surprise' },
+];
+
+const SAFE_CHIPS: { id: string; labelKey: StringKey }[] = [
+  { id: 'adventure', labelKey: 'opener.chip.adventure' },
+  { id: 'silly',     labelKey: 'opener.chip.silly' },
+  { id: 'animals',   labelKey: 'opener.chip.animals' },
+];
+
+type StepKind = 'lang' | 'opener' | 'voice' | 'q';
+
 export function CreatePage() {
   const t = useT();
   const { lang: uiLang } = useLang();
+  const [prefs] = usePrefs();
   const navigate = useNavigate();
 
-  // Story language is initialized from UI language but pickable per story.
   const [storyLang, setStoryLang] = useState<Lang | null>(null);
-  const suggestedLang: Lang = uiLang;
-
-  const [step, setStep] = useState(0);
+  const [storyType, setStoryType] = useState<string | null>(null);
+  const [openerText, setOpenerText] = useState('');
+  const [modRedirect, setModRedirect] = useState(false);
+  const [voiceKey, setVoiceKey] = useState<string>(() => defaultVoiceFor(uiLang).key);
+  const [stepKind, setStepKind] = useState<StepKind>('lang');
+  const [qIndex, setQIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [current, setCurrent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const spokenForRef = useRef<number>(-1);
+  const [simplerOn, setSimplerOn] = useState<Record<string, boolean>>({});
+  const [helping, setHelping] = useState<string | null>(null);
+  const spokenForKeyRef = useRef<string>('');
 
-  const q = QUESTIONS[step];
+  const q = QUESTIONS[qIndex];
   const totalDone = Object.keys(answers).length;
   const minDone = QUESTIONS.filter((x) => x.required).length;
   const canFinish = totalDone >= minDone;
-  const isLastQuestion = step >= QUESTIONS.length - 1;
+  const isLastQuestion = qIndex >= QUESTIONS.length - 1;
+  const voiceMeta = findVoiceByKey(voiceKey) ?? defaultVoiceFor(storyLang ?? uiLang);
 
+  const speakKey = (key: StringKey) => {
+    if (!storyLang) return;
+    const text = t(key);
+    void speakBest(text, {
+      language: storyLang,
+      voiceId: voiceMeta.elevenlabsVoiceId,
+      speed: prefs.slow ? 0.75 : undefined,
+    });
+  };
+
+  // Speak whenever the spoken prompt for this step changes.
   useEffect(() => {
     if (!storyLang) return;
-    if (!q) return;
-    if (spokenForRef.current === step) return;
-    spokenForRef.current = step;
-    speak(t(q.spokenKey));
-    return () => cancelSpeech();
-  }, [step, q, storyLang, t]);
+    let spokenKey: StringKey | null = null;
+    let stepId = '';
+    if (stepKind === 'opener') { spokenKey = 'opener.spoken'; stepId = 'opener'; }
+    else if (stepKind === 'voice') { spokenKey = 'voice.stepTitle'; stepId = 'voice'; }
+    else if (stepKind === 'q' && q) {
+      spokenKey = (simplerOn[q.id] && QUESTION_HELPERS[q.id]?.simplerKey) || q.spokenKey;
+      stepId = `q-${q.id}-${simplerOn[q.id] ? 'simpler' : 'normal'}`;
+    }
+    if (spokenKey && spokenForKeyRef.current !== stepId) {
+      spokenForKeyRef.current = stepId;
+      speakKey(spokenKey);
+    }
+    return () => { cancelSpeech(); stopAskVoice(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepKind, qIndex, storyLang, simplerOn, voiceKey, prefs.slow]);
 
-  useEffect(() => () => cancelSpeech(), []);
+  useEffect(() => () => { cancelSpeech(); stopAskVoice(); }, []);
 
-  // Step 0: pick the story's language.
+  // -----------------------------------------------------------
+  // STEP: pick story language
+  // -----------------------------------------------------------
   if (!storyLang) {
+    const suggested = uiLang;
     return (
       <Layout>
         <div className="card">
@@ -71,15 +120,15 @@ export function CreatePage() {
           <div className="row" style={{ marginTop: 16 }}>
             <button
               type="button"
-              className={`btn${suggestedLang === 'en' ? ' sun' : ''}`}
-              onClick={() => setStoryLang('en')}
+              className={`btn${suggested === 'en' ? ' sun' : ''}`}
+              onClick={() => { setStoryLang('en'); setVoiceKey(defaultVoiceFor('en').key); setStepKind('opener'); }}
             >
               {t('create.langStepEn')}
             </button>
             <button
               type="button"
-              className={`btn${suggestedLang === 'sv' ? ' sun' : ''}`}
-              onClick={() => setStoryLang('sv')}
+              className={`btn${suggested === 'sv' ? ' sun' : ''}`}
+              onClick={() => { setStoryLang('sv'); setVoiceKey(defaultVoiceFor('sv').key); setStepKind('opener'); }}
             >
               {t('create.langStepSv')}
             </button>
@@ -92,7 +141,116 @@ export function CreatePage() {
     );
   }
 
-  // Once we run past the last question.
+  // -----------------------------------------------------------
+  // STEP: story-type opener
+  // -----------------------------------------------------------
+  if (stepKind === 'opener') {
+    const advanceWith = (typeId: string, typeLabel: string) => {
+      setStoryType(typeId);
+      setAnswers((prev) => ({ ...prev, type: typeLabel }));
+      setModRedirect(false);
+      setStepKind('voice');
+    };
+    const submitFreeText = async () => {
+      const text = openerText.trim();
+      if (!text) {
+        setError(t('create.typeOrSpeak'));
+        return;
+      }
+      setError(null);
+      // Client-side moderation before storing.
+      try {
+        const { flagged } = await moderateText(text);
+        if (flagged) { setModRedirect(true); return; }
+      } catch { /* moderation network failure → let user proceed; server-side guard still runs */ }
+      advanceWith('custom', text);
+    };
+
+    if (modRedirect) {
+      return (
+        <Layout>
+          <div className="card">
+            <div className="question">{t('mod.redirectTitle')}</div>
+            <p>{t('mod.redirectBody')}</p>
+            <div className="chip-grid">
+              {SAFE_CHIPS.map((c) => (
+                <button key={c.id} type="button" className="chip" onClick={() => advanceWith(c.id, t(c.labelKey))}>
+                  {t(c.labelKey)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Layout>
+      );
+    }
+
+    return (
+      <Layout>
+        <div className="card">
+          <div className="question">{t('opener.title')}</div>
+          <button type="button" className="btn ghost" onClick={() => speakKey('opener.spoken')}>
+            {t('create.hearAgain')}
+          </button>
+          <div className="chip-grid">
+            {OPENER_CHIPS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`chip${storyType === c.id ? ' selected' : ''}`}
+                onClick={() => advanceWith(c.id, t(c.labelKey))}
+              >
+                {t(c.labelKey)}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <input
+              type="text"
+              value={openerText}
+              placeholder={t('opener.placeholder')}
+              onChange={(e) => setOpenerText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') void submitFreeText(); }}
+            />
+          </div>
+          {error && <div className="error">{error}</div>}
+          <div className="row right" style={{ marginTop: 12 }}>
+            <button type="button" className="btn" onClick={submitFreeText}>{t('create.next')}</button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // -----------------------------------------------------------
+  // STEP: voice picker
+  // -----------------------------------------------------------
+  if (stepKind === 'voice') {
+    return (
+      <Layout>
+        <div className="card">
+          <div className="question">{t('voice.stepTitle')}</div>
+          <button type="button" className="btn ghost" onClick={() => speakKey('voice.stepTitle')}>
+            {t('create.hearAgain')}
+          </button>
+          <div style={{ marginTop: 16 }}>
+            <VoicePicker value={voiceKey} onChange={setVoiceKey} />
+          </div>
+          <div className="row right" style={{ marginTop: 12 }}>
+            <button type="button" className="btn sun" onClick={() => { setStepKind('q'); setQIndex(0); }}>
+              {t('voice.next')}
+            </button>
+          </div>
+          <p className="subtle" style={{ marginTop: 12 }}>
+            {VOICES.length} {VOICES.length === 1 ? 'voice' : 'voices'} available.
+          </p>
+        </div>
+      </Layout>
+    );
+  }
+
+  // -----------------------------------------------------------
+  // STEP: questions (existing flow)
+  // -----------------------------------------------------------
   if (!q) {
     return (
       <Layout>
@@ -113,25 +271,27 @@ export function CreatePage() {
     setError(null);
     setAnswers((prev) => ({ ...prev, [q.id]: trimmed }));
     setCurrent('');
-    setStep((s) => s + 1);
+    setQIndex((s) => s + 1);
   };
 
   const skipOptional = () => {
     setError(null);
     setCurrent('');
-    setStep((s) => s + 1);
+    setQIndex((s) => s + 1);
   };
 
   const submit = async () => {
     setSubmitting(true);
     setError(null);
-    const payload: StoryAnswer[] = QUESTIONS
-      .filter((qq) => answers[qq.id])
-      .map((qq) => ({ question: t(qq.promptKey), answer: answers[qq.id] }));
+    const payload: StoryAnswer[] = [];
+    if (answers.type) payload.push({ question: t('opener.title'), answer: answers.type });
+    for (const qq of QUESTIONS) {
+      if (answers[qq.id]) {
+        payload.push({ question: t(qq.promptKey), answer: answers[qq.id] });
+      }
+    }
     try {
-      const story = await createStory(payload, storyLang);
-      // The trigger returns 202 immediately with a pending story id;
-      // the story page polls until the background worker finishes.
+      const story = await createStory(payload, storyLang, voiceMeta.elevenlabsVoiceId);
       navigate(`/s/${story.id}`);
     } catch (e) {
       setSubmitting(false);
@@ -150,7 +310,10 @@ export function CreatePage() {
     );
   }
 
-  const progressPct = Math.min(100, Math.round((step / QUESTIONS.length) * 100));
+  const helpers = QUESTION_HELPERS[q.id];
+  const isSimpler = !!simplerOn[q.id];
+  const displayPromptKey: StringKey = isSimpler && helpers?.simplerKey ? helpers.simplerKey : q.promptKey;
+  const progressPct = Math.min(100, Math.round((qIndex / QUESTIONS.length) * 100));
 
   return (
     <Layout>
@@ -158,20 +321,54 @@ export function CreatePage() {
         <div style={{ width: `${progressPct}%` }} />
       </div>
       <div className="card">
-        <div className="question">{t(q.promptKey)}</div>
+        <div className="question">{t(displayPromptKey)}</div>
         <p className="subtle">
           {q.required ? t('create.required') : t('create.optional')}
         </p>
-        <button type="button" className="btn ghost" onClick={() => speak(t(q.spokenKey))}>
-          {t('create.hearAgain')}
-        </button>
+        <div className="helper-row">
+          <button type="button" className="btn ghost" onClick={() => speakKey(displayPromptKey)}>
+            {t('create.hearAgain')}
+          </button>
+          {helpers?.simplerKey && (
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => setSimplerOn((s) => ({ ...s, [q.id]: !s[q.id] }))}
+            >
+              {isSimpler ? t('help.original') : t('help.simpler')}
+            </button>
+          )}
+          {helpers?.tree && (
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => setHelping(q.id)}
+            >
+              {t('help.yesno')}
+            </button>
+          )}
+        </div>
+
+        {helping === q.id && helpers?.tree && (
+          <div style={{ marginTop: 16 }}>
+            <HelpYesNo
+              tree={helpers.tree}
+              language={storyLang}
+              onAnswer={(text) => {
+                setCurrent((c) => (c ? c + ' ' + text : text));
+                setHelping(null);
+              }}
+              onCancel={() => setHelping(null)}
+            />
+          </div>
+        )}
 
         <div style={{ marginTop: 16 }}>
           <MicInput
             value={current}
             onChange={setCurrent}
             placeholder={t(q.placeholderKey)}
-            ariaLabel={t(q.promptKey)}
+            ariaLabel={t(displayPromptKey)}
             language={storyLang}
           />
         </div>
@@ -208,6 +405,12 @@ export function CreatePage() {
         <div className="card">
           <div className="subtle" style={{ marginBottom: 6 }}>{t('create.soFar')}</div>
           <ul className="answer-list">
+            {answers.type && (
+              <li>
+                <b>{t('opener.title')}</b><br />
+                {answers.type}
+              </li>
+            )}
             {QUESTIONS.filter((qq) => answers[qq.id]).map((qq) => (
               <li key={qq.id}>
                 <b>{t(qq.promptKey)}</b><br />
