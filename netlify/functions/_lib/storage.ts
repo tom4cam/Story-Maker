@@ -99,3 +99,17 @@ export async function readMedia(key: string): Promise<{ data: ArrayBuffer; conte
   const contentType = (result.metadata?.contentType as string | undefined) ?? 'application/octet-stream';
   return { data: result.data as ArrayBuffer, contentType };
 }
+
+// Hard-delete every blob belonging to a story: all version snapshots,
+// the index summary, and all media keys (images + audio). Returns the
+// count of deleted blobs. Safe to call on a non-existent id (returns 0).
+export async function deleteStoryAndMedia(id: string): Promise<{ story: number; media: number }> {
+  const s = stories();
+  const m = media();
+  const { blobs: storyBlobs } = await s.list({ prefix: `${id}/` });
+  for (const b of storyBlobs) await s.delete(b.key);
+  // Media keys are flat: "{id}-v{n}-p{i}.png" and "{id}-v{n}.mp3".
+  const { blobs: mediaBlobs } = await m.list({ prefix: `${id}-` });
+  for (const b of mediaBlobs) await m.delete(b.key);
+  return { story: storyBlobs.length, media: mediaBlobs.length };
+}

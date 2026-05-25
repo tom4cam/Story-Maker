@@ -64,6 +64,13 @@ export const sv: Record<StringKey, string> = {
   'story.savedPrefix': 'sparad',
   'story.editLink': 'Redigera den här sagan',
   'story.makeAnother': 'Skapa en ny',
+  'story.download': 'Ladda ner som PDF',
+  'story.delete': 'Ta bort sagan',
+  'story.deleteConfirmTitle': 'Ta bort den här sagan?',
+  'story.deleteConfirmBody': 'Det går inte att ångra. Sagan, alla versioner, bilder och ljud tas bort.',
+  'story.deleteYes': 'Ja, ta bort',
+  'story.deleteNo': 'Behåll den',
+  'story.deleteFailed': 'Det gick inte att ta bort sagan. Försök igen.',
 
   // Edit page
   'edit.loading': 'Laddar sagan...',

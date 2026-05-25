@@ -63,3 +63,17 @@ export async function moderateText(text: string): Promise<{ flagged: boolean; re
   });
   return jsonOrThrow(res);
 }
+
+export async function deleteStory(id: string): Promise<void> {
+  const res = await fetch(`${FN_BASE}/deleteStory`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { const body = await res.json(); detail = body?.error || JSON.stringify(body); }
+    catch { detail = await res.text(); }
+    throw new Error(`Delete failed (${res.status}): ${detail}`);
+  }
+}

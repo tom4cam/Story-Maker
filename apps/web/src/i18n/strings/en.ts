@@ -62,6 +62,13 @@ export const en = {
   'story.savedPrefix': 'saved',
   'story.editLink': 'Edit this story',
   'story.makeAnother': 'Make a new one',
+  'story.download': 'Download as PDF',
+  'story.delete': 'Delete this story',
+  'story.deleteConfirmTitle': 'Delete this story?',
+  'story.deleteConfirmBody': "This can't be undone. The story, its versions, pictures, and audio will all be removed.",
+  'story.deleteYes': 'Yes, delete it',
+  'story.deleteNo': 'Keep it',
+  'story.deleteFailed': 'Could not delete the story. Try again.',
 
   // Edit page
   'edit.loading': 'Loading the story...',

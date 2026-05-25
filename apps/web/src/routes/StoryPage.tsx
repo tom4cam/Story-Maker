@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { AudioBar, type AudioBarRef } from '../components/AudioBar';
-import { getStory } from '../api';
+import { deleteStory, getStory } from '../api';
 import { useAudioSync } from '../audioSync';
 import { useLang, useT } from '../i18n';
 import type { StoryVersion, WordTiming } from '../types';
@@ -12,10 +12,14 @@ const POLL_INTERVAL_MS = 10000;
 export function StoryPage() {
   const t = useT();
   const { lang } = useLang();
+  const navigate = useNavigate();
   const { id, version } = useParams<{ id: string; version?: string }>();
   const [story, setStory] = useState<StoryVersion | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const pollingRef = useRef<number | null>(null);
   const audioRef = useRef<AudioBarRef | null>(null);
   const activeIndex = useAudioSync(audioRef, story?.narration_words);
@@ -158,10 +162,58 @@ export function StoryPage() {
         </div>
       ))}
 
-      <div className="row" style={{ justifyContent: 'center', marginTop: 24 }}>
+      <div className="row no-print" style={{ justifyContent: 'center', marginTop: 24 }}>
         <Link to={`/s/${story.id}/edit`} className="btn secondary">{t('story.editLink')}</Link>
+        <button type="button" className="btn ghost" onClick={() => window.print()}>
+          {t('story.download')}
+        </button>
         <Link to="/create" className="btn">{t('story.makeAnother')}</Link>
       </div>
+
+      {!confirmingDelete && (
+        <div className="row no-print" style={{ justifyContent: 'center', marginTop: 16 }}>
+          <button type="button" className="btn danger-ghost" onClick={() => setConfirmingDelete(true)}>
+            {t('story.delete')}
+          </button>
+        </div>
+      )}
+
+      {confirmingDelete && (
+        <div className="card delete-confirm no-print" style={{ marginTop: 16 }}>
+          <div className="question">{t('story.deleteConfirmTitle')}</div>
+          <p>{t('story.deleteConfirmBody')}</p>
+          {deleteError && <div className="error">{deleteError}</div>}
+          <div className="row" style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              className="btn danger"
+              disabled={deleting}
+              onClick={async () => {
+                if (!id) return;
+                setDeleting(true);
+                setDeleteError(null);
+                try {
+                  await deleteStory(id);
+                  navigate('/');
+                } catch (e) {
+                  setDeleting(false);
+                  setDeleteError(`${t('story.deleteFailed')} (${(e as Error).message})`);
+                }
+              }}
+            >
+              {deleting ? '...' : t('story.deleteYes')}
+            </button>
+            <button
+              type="button"
+              className="btn ghost"
+              disabled={deleting}
+              onClick={() => { setConfirmingDelete(false); setDeleteError(null); }}
+            >
+              {t('story.deleteNo')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {story.narration_url && (
         <AudioBar ref={audioRef} src={story.narration_url} />
