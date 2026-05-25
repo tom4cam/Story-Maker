@@ -13,16 +13,18 @@ export function Layout({ children, showExit = false }: Props) {
   return (
     <div className="page">
       <div className="header">
-        {showExit && (
-          <Link to="/" className="exit-btn" aria-label={t('story.backHome')} title={t('story.backHome')}>
-            {'×'}
-          </Link>
-        )}
         <Link to="/" className="brand">
           {t('brand.name')}
           <small>{t('brand.tagline')}</small>
         </Link>
-        <SettingsCog />
+        <div className="header-actions">
+          {showExit && (
+            <Link to="/" className="exit-btn" aria-label={t('story.backHome')} title={t('story.backHome')}>
+              {'×'}
+            </Link>
+          )}
+          <SettingsCog />
+        </div>
       </div>
       {children}
       <div className="footer">{t('dedication.line')}</div>
