@@ -1,0 +1,21 @@
+# Cloudflare Pages + Workers configuration for Brennan & Linnéa's Story Maker.
+# The Pages project name is set when first linked via `wrangler pages project create`
+# or in the dashboard. Bindings here apply to functions/ files at build time.
+
+name = "brennans-story-maker"
+compatibility_date = "2026-05-24"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "apps/web/dist"
+
+# R2 buckets — created once via `wrangler r2 bucket create <name>`.
+[[r2_buckets]]
+binding = "STORIES"
+bucket_name = "story-maker-stories"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "story-maker-media"
+
+# Public env vars (non-secret). API keys are set with `wrangler pages secret put NAME`.
+[vars]
+ANTHROPIC_MODEL = "claude-sonnet-4-6"

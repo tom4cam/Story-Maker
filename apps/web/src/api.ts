@@ -1,6 +1,6 @@
 import type { StoryAnswer, StorySummary, StoryVersion } from './types';
 
-const FN_BASE = '/.netlify/functions';
+const FN_BASE = '/api';
 
 async function jsonOrThrow<T>(res: Response): Promise<T> {
   if (!res.ok) {

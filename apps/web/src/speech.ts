@@ -42,7 +42,7 @@ export async function playAskVoice(text: string, opts: AskVoiceOpts): Promise<vo
   const cacheKey = `${opts.language}|${opts.voiceId}|${opts.speed ?? 1}|${text}`;
   let blob = askCache.get(cacheKey);
   if (!blob) {
-    const res = await fetch('/.netlify/functions/askVoice', {
+    const res = await fetch('/api/askVoice', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, language: opts.language, voiceId: opts.voiceId, speed: opts.speed }),
