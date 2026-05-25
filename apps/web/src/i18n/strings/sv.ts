@@ -87,6 +87,11 @@ export const sv: Record<StringKey, string> = {
   'mic.unavailable': 'Röstinmatning fungerar inte i den här webbläsaren. Du kan fortfarande skriva svaret. (Chrome och Edge fungerar bäst för röst.)',
   'mic.notHeard': 'Förlåt, jag hörde inte. Försök igen.',
 
+  // Audio player
+  'audio.play': 'Spela',
+  'audio.pause': 'Pausa',
+  'audio.replay': 'Spela igen',
+
   // Settings cog
   'settings.title': 'Inställningar',
   'settings.language': 'Språk',
