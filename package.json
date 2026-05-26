@@ -12,9 +12,9 @@
     "preview": "npm --workspace apps/web run preview",
     "typecheck": "npm --workspace apps/web run typecheck && tsc --noEmit -p functions",
     "deploy": "wrangler pages deploy",
-    "seed:stories": "tsx scripts/seed-default-stories.ts",
-    "seed:samples": "tsx scripts/seed-voice-samples.ts",
-    "revert": "tsx scripts/revert-story.ts"
+    "seed:stories": "tsx --env-file-if-exists=.env scripts/seed-default-stories.ts",
+    "seed:samples": "tsx --env-file-if-exists=.env scripts/seed-voice-samples.ts",
+    "revert": "tsx --env-file-if-exists=.env scripts/revert-story.ts"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1053.0",
