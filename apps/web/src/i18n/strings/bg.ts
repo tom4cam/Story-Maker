@@ -97,8 +97,6 @@ export const bg = {
   "audio.play": "Пусни",
   "audio.pause": "Пауза",
   "audio.replay": "Пусни отново",
-  "audio.collapse": "Скрий плейъра",
-  "audio.expand": "Покажи плейъра",
   "settings.title": "Настройки",
   "settings.language": "Език",
   "settings.languageEn": "English",

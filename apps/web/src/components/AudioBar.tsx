@@ -1,6 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useT } from '../i18n';
-import { usePrefs } from '../prefs';
 
 interface Props {
   src: string;
@@ -8,14 +7,18 @@ interface Props {
 
 export type AudioBarRef = HTMLAudioElement;
 
+// Auto-hide thresholds.
+const HIDE_BELOW = 80; // bar always visible above this scrollY
+const SCROLL_DELTA = 10; // minimum delta to flip hidden/visible
+
 export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }, ref) {
   const t = useT();
-  const [prefs, setPrefs] = usePrefs();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [ended, setEnded] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useImperativeHandle(ref, () => audioRef.current as HTMLAudioElement, []);
 
@@ -37,7 +40,6 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
     el.addEventListener('loadedmetadata', onMeta);
     el.addEventListener('durationchange', onMeta);
     el.addEventListener('canplay', onMeta);
-    // Some browsers populate duration synchronously when src is set.
     onMeta();
     return () => {
       el.removeEventListener('play', onPlay);
@@ -47,6 +49,29 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
       el.removeEventListener('loadedmetadata', onMeta);
       el.removeEventListener('durationchange', onMeta);
       el.removeEventListener('canplay', onMeta);
+    };
+  }, []);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = Math.max(0, window.scrollY);
+      const delta = y - lastY;
+      if (y < HIDE_BELOW) {
+        setHidden(false);
+      } else if (delta > SCROLL_DELTA) {
+        setHidden(true);
+      } else if (delta < -SCROLL_DELTA) {
+        setHidden(false);
+      }
+      if (Math.abs(delta) > SCROLL_DELTA) lastY = y;
+    };
+    const onPointer = () => setHidden(false);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('pointerdown', onPointer);
     };
   }, []);
 
@@ -71,11 +96,9 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
   const label = ended ? t('audio.replay') : isPlaying ? t('audio.pause') : t('audio.play');
-  const collapsed = prefs.audioBarCollapsed;
-  const collapseLabel = collapsed ? t('audio.expand') : t('audio.collapse');
 
   return (
-    <div className={`audio-bar${collapsed ? ' audio-bar-collapsed' : ''}`}>
+    <div className={`audio-bar${hidden ? ' audio-bar-hidden' : ''}`} aria-hidden={hidden}>
       <button
         type="button"
         className={`play-btn ${isPlaying ? 'is-playing' : ''}`}
@@ -86,7 +109,7 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
         {isPlaying ? '❚❚' : '▶'}
       </button>
       <div
-        className="audio-progress audio-bar-secondary"
+        className="audio-progress"
         role="slider"
         aria-label={label}
         aria-valuemin={0}
@@ -96,18 +119,9 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
       >
         <div className="audio-progress-fill" style={{ width: `${pct}%` }} />
       </div>
-      <div className="audio-time audio-bar-secondary">
+      <div className="audio-time">
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>
-      <button
-        type="button"
-        className="audio-bar-collapse-btn"
-        onClick={() => setPrefs({ audioBarCollapsed: !collapsed })}
-        aria-label={collapseLabel}
-        title={collapseLabel}
-      >
-        {collapsed ? '▲' : '▼'}
-      </button>
       <audio ref={audioRef} src={src} preload="metadata" hidden />
     </div>
   );

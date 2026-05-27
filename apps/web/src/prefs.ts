@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 
 export interface Prefs {
   slow: boolean;
-  audioBarCollapsed: boolean;
 }
 
 const KEY = 'storyMaker.prefs';
-const DEFAULT: Prefs = { slow: false, audioBarCollapsed: false };
+const DEFAULT: Prefs = { slow: false };
 
 function read(): Prefs {
   if (typeof window === 'undefined') return DEFAULT;

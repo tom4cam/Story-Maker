@@ -97,8 +97,6 @@ export const fr = {
   "audio.play": "Écouter",
   "audio.pause": "Pause",
   "audio.replay": "Réécouter",
-  "audio.collapse": "Masquer le lecteur",
-  "audio.expand": "Afficher le lecteur",
   "settings.title": "Paramètres",
   "settings.language": "Langue",
   "settings.languageEn": "English",

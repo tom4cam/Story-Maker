@@ -97,8 +97,6 @@ export const es = {
   "audio.play": "Reproducir",
   "audio.pause": "Pausar",
   "audio.replay": "Reproducir de nuevo",
-  "audio.collapse": "Ocultar reproductor",
-  "audio.expand": "Mostrar reproductor",
   "settings.title": "Ajustes",
   "settings.language": "Idioma",
   "settings.languageEn": "English",

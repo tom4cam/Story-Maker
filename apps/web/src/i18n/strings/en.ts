@@ -116,8 +116,6 @@ export const en = {
   'audio.play': 'Play',
   'audio.pause': 'Pause',
   'audio.replay': 'Play again',
-  'audio.collapse': 'Hide player',
-  'audio.expand': 'Show player',
 
   // Settings cog
   'settings.title': 'Settings',

@@ -118,8 +118,6 @@ export const sv: Record<StringKey, string> = {
   'audio.play': 'Spela',
   'audio.pause': 'Pausa',
   'audio.replay': 'Spela igen',
-  'audio.collapse': 'Dölj spelaren',
-  'audio.expand': 'Visa spelaren',
 
   // Settings cog
   'settings.title': 'Inställningar',

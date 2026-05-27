@@ -259,6 +259,12 @@ textarea, input[type=text] {
   gap: 14px;
   box-shadow: 0 8px 24px rgba(0, 24, 88, 0.18);
   width: min(880px, calc(100% - 32px));
+  transition: transform 200ms ease-out, opacity 200ms ease-out;
+}
+.audio-bar-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 32px));
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Bottom padding so the last paragraph isn't hidden behind the fixed audio bar. */
@@ -309,26 +315,6 @@ body.has-audio-bar .page { padding-bottom: 24px; }
   font-weight: 700;
   color: var(--ink-soft);
   font-size: 16px;
-}
-
-.audio-bar-collapsed .audio-bar-secondary {
-  display: none;
-}
-
-.audio-bar-collapse-btn {
-  background: none;
-  border: 2px solid var(--ink);
-  border-radius: 12px;
-  padding: 2px 8px;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  color: var(--ink);
-  flex: 0 0 auto;
-  line-height: 1.4;
-}
-.audio-bar-collapse-btn:hover {
-  background: var(--accent-soft);
 }
 
 .recent-list {
