@@ -39,6 +39,8 @@ export interface StoryVersion {
   narration_words?: WordTiming[];
   voice_id?: string;
   summary?: string;
+  creator_id?: string;
+  listed?: boolean;
 }
 
 export interface StoryIndex {
@@ -49,6 +51,7 @@ export interface StoryIndex {
   updated_at: string;
   created_at: string;
   status: StoryStatus;
+  creator_id?: string;
 }
 
 export interface GeneratedStory {

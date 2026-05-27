@@ -36,6 +36,8 @@ export interface StoryVersion {
   narration_words?: WordTiming[];
   voice_id?: string;
   summary?: string;
+  creator_id?: string;
+  listed?: boolean;
 }
 
 export interface StorySummary {
@@ -44,4 +46,5 @@ export interface StorySummary {
   latest_version: number;
   cover_image_url: string | null;
   updated_at: string;
+  creator_id?: string;
 }
