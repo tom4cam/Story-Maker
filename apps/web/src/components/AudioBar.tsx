@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useT } from '../i18n';
+import { usePrefs } from '../prefs';
 
 interface Props {
   src: string;
@@ -9,6 +10,7 @@ export type AudioBarRef = HTMLAudioElement;
 
 export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }, ref) {
   const t = useT();
+  const [prefs, setPrefs] = usePrefs();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -69,9 +71,11 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
   const label = ended ? t('audio.replay') : isPlaying ? t('audio.pause') : t('audio.play');
+  const collapsed = prefs.audioBarCollapsed;
+  const collapseLabel = collapsed ? t('audio.expand') : t('audio.collapse');
 
   return (
-    <div className="audio-bar">
+    <div className={`audio-bar${collapsed ? ' audio-bar-collapsed' : ''}`}>
       <button
         type="button"
         className={`play-btn ${isPlaying ? 'is-playing' : ''}`}
@@ -82,7 +86,7 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
         {isPlaying ? '❚❚' : '▶'}
       </button>
       <div
-        className="audio-progress"
+        className="audio-progress audio-bar-secondary"
         role="slider"
         aria-label={label}
         aria-valuemin={0}
@@ -92,9 +96,18 @@ export const AudioBar = forwardRef<AudioBarRef, Props>(function AudioBar({ src }
       >
         <div className="audio-progress-fill" style={{ width: `${pct}%` }} />
       </div>
-      <div className="audio-time">
+      <div className="audio-time audio-bar-secondary">
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>
+      <button
+        type="button"
+        className="audio-bar-collapse-btn"
+        onClick={() => setPrefs({ audioBarCollapsed: !collapsed })}
+        aria-label={collapseLabel}
+        title={collapseLabel}
+      >
+        {collapsed ? '▲' : '▼'}
+      </button>
       <audio ref={audioRef} src={src} preload="metadata" hidden />
     </div>
   );

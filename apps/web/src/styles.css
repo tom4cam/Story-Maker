@@ -311,6 +311,26 @@ body.has-audio-bar .page { padding-bottom: 24px; }
   font-size: 16px;
 }
 
+.audio-bar-collapsed .audio-bar-secondary {
+  display: none;
+}
+
+.audio-bar-collapse-btn {
+  background: none;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ink);
+  flex: 0 0 auto;
+  line-height: 1.4;
+}
+.audio-bar-collapse-btn:hover {
+  background: var(--accent-soft);
+}
+
 .recent-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
