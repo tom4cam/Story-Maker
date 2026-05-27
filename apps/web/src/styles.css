@@ -628,6 +628,27 @@ ul.answer-list li b { color: var(--ink-soft); }
 .helper-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .helper-row .btn { padding: 10px 16px; font-size: 16px; min-height: auto; border-width: 3px; }
 
+.share-toast {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: toast-fade 2s ease forwards;
+}
+@keyframes toast-fade {
+  0% { opacity: 0; transform: translate(-50%, 6px); }
+  10% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -6px); }
+}
+
 /* Print: clean PDF output via browser "Save as PDF" in the print dialog */
 @media print {
   body { background: white; color: black; padding: 0; margin: 0; font-family: Georgia, 'Times New Roman', serif; }

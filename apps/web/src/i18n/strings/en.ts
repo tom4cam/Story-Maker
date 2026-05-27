@@ -77,6 +77,8 @@ export const en = {
   'story.listed': 'Listed on home page',
   'story.unlisted': 'Hidden from home page',
   'story.listingFailed': "Couldn't update — try again.",
+  'story.share': 'Share',
+  'story.shareCopied': 'Link copied!',
   'story.translate': 'Translate',
   'story.translateChoose': 'Translate into:',
   'story.translating': 'Translating...',

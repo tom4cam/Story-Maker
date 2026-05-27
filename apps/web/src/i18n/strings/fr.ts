@@ -68,6 +68,8 @@ export const fr = {
   "story.listed": "Visible sur la page d'accueil",
   "story.unlisted": "Cachée de la page d'accueil",
   "story.listingFailed": "Échec de la mise à jour — réessaie.",
+  "story.share": "Partager",
+  "story.shareCopied": "Lien copié !",
   "story.translate": "Traduire",
   "story.translateChoose": "Traduire en:",
   "story.translating": "Traduction en cours...",

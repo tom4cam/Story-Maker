@@ -68,6 +68,8 @@ export const es = {
   "story.listed": "Visible en la página principal",
   "story.unlisted": "Oculta de la página principal",
   "story.listingFailed": "No se pudo actualizar — inténtalo de nuevo.",
+  "story.share": "Compartir",
+  "story.shareCopied": "¡Enlace copiado!",
   "story.translate": "Traducir",
   "story.translateChoose": "Traducir a:",
   "story.translating": "Traduciendo...",

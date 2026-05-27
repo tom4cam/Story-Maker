@@ -68,6 +68,8 @@ export const bg = {
   "story.listed": "Показва се на началната страница",
   "story.unlisted": "Скрита от началната страница",
   "story.listingFailed": "Неуспешна актуализация — опитай отново.",
+  "story.share": "Сподели",
+  "story.shareCopied": "Връзката е копирана!",
   "story.translate": "Преведи",
   "story.translateChoose": "Преведи на:",
   "story.translating": "Превежда се...",

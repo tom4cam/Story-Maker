@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { AudioBar, type AudioBarRef } from '../components/AudioBar';
+import { ShareButton } from '../components/ShareButton';
 import { deleteStory, getStory, translateStory as apiTranslate, updateStoryListing } from '../api';
 import { getCreatorId } from '../creatorId';
 import { useAudioSync } from '../audioSync';
@@ -194,6 +195,7 @@ export function StoryPage() {
         <button type="button" className="btn ghost" onClick={() => window.print()}>
           {t('story.download')}
         </button>
+        <ShareButton title={story.title} />
         <button type="button" className="btn ghost" onClick={() => setTranslatePickerOpen((v) => !v)}>
           {t('story.translate')}
         </button>
